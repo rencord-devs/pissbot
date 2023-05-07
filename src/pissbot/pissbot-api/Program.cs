@@ -23,11 +23,12 @@ namespace Rencord.PissBot
             builder.Services.Configure<List<GuildOptions>>(
                 builder.Configuration.GetSection(GuildOptions.Guilds));
 
+            builder.Services.AddApplicationInsightsTelemetry();
             builder.Services.AddSingleton<IDiscordClientFactory, DiscordSocketClientFactory>();
             builder.Services.AddSingleton<IGuildDataPersistence, BlobGuildPersistence>();
             builder.Services.AddSingleton<IPissDroplet, SentenceGame>();
             builder.Services.AddSingleton<IPissDroplet, PissBotLookingForPiss>();
-
+            
             // Add services to the container.
             builder.Services.AddControllers();
             builder.Services.AddHostedService<PissBotService>();
@@ -37,9 +38,7 @@ namespace Rencord.PissBot
             // Configure the HTTP request pipeline.
 
             app.UseHttpsRedirection();
-
             app.UseAuthorization();
-
 
             app.MapControllers();
 

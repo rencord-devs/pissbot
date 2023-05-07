@@ -33,6 +33,8 @@ namespace Rencord.PissBot.Droplets
 
             if (arg.Content is not null && arg.Content.ToLower().Contains("piss"))
             {
+                var user = stc.Guild.GetUser(arg.Author.Id);
+                if (user?.Roles is null || !user.Roles.Any(x => x.Name?.ToLower().Contains("piss") == true)) return;
                 try
                 {
                     await arg.AddReactionAsync(Emote.Parse("<:notp:1000806527965347922>"));
