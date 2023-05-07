@@ -132,6 +132,7 @@ namespace Rencord.PissBot.Droplets
                 await resultChannel.SendMessageAsync(message);
                 gameData.SentenceAuthors.Clear();
                 gameData.CurrentSentence.Clear();
+                gameData.PreviousAuthor = 0;
                 await ReactCelebrate(arg);
             }
             await guildDataStore.SaveGuild(stc.Guild.Id);
