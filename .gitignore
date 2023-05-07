@@ -396,4 +396,4 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
-/src/sentence-bot/sentence-bot-api/appsettings.Development.json
+/src/pissbot/pissbot-api/appsettings.Development.json
