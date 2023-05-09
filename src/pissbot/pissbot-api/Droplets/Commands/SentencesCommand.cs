@@ -11,16 +11,19 @@ namespace Rencord.PissBot.Droplets.Commands
         public const string GameChannelOption = "gamechannel";
         public const string ResultChannelOption = "resultchannel";
         public const string RemoveResultChannelOption = "removeresultchannel";
+        public const string RemoveLastAuthorOption = "removelastauthor";
+        
 
         public Task Configure(SlashCommandBuilder builder)
         {
             builder.WithName(Name)
-                   .WithDescription("Enable the sentence game")
+                   .WithDescription("Manage the Pissbot sentence game")
                    .WithDefaultMemberPermissions(GuildPermission.ManageChannels)
                    .AddOption(EnableOption, ApplicationCommandOptionType.Boolean, "enable or disable the sentence game", isRequired: false)
                    .AddOption(GameChannelOption, ApplicationCommandOptionType.Channel, "the channel to play in", isRequired: false)
                    .AddOption(ResultChannelOption, ApplicationCommandOptionType.Channel, "the optional additional channel to post results in", isRequired: false)
-                   .AddOption(RemoveResultChannelOption, ApplicationCommandOptionType.Boolean, "set to true to remove existing results channel and only post results in the game channel", isRequired: false);
+                   .AddOption(RemoveResultChannelOption, ApplicationCommandOptionType.Boolean, "set to true to remove existing results channel and only post results in the game channel", isRequired: false)
+                   .AddOption(RemoveLastAuthorOption, ApplicationCommandOptionType.Boolean, "set to true to clear the last sentence author", isRequired: false);
             return Task.CompletedTask;
         }
 
@@ -58,6 +61,14 @@ namespace Rencord.PissBot.Droplets.Commands
             {
                 modified = DataState.Modified;
                 config.ResultsChannel = null;
+            }
+
+            var removeAuthorOpt = command.Data.Options.FirstOrDefault(x => x.Name == RemoveLastAuthorOption);
+            if (removeAuthorOpt?.Value is bool value3 && value3)
+            {
+                modified = DataState.Modified;
+                var gameData = guildData.GetOrAddData(() => new SentenceGameData());
+                gameData.PreviousAuthor = 0;
             }
 
             return Respond((modified, DataState.Pristine), config, command, guildData);
