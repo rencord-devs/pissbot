@@ -8,7 +8,7 @@ namespace Rencord.PissBot.Core
     {
         private readonly IDiscordClientFactory discordClientFactory;
         private readonly IEnumerable<IPissDroplet> pissDroplets;
-        private IDiscordClient? discordClient;
+        private DiscordSocketClient? discordClient;
 
         public PissBotService(IDiscordClientFactory discordClientFactory,
                               IEnumerable<IPissDroplet> pissDroplets)
@@ -29,7 +29,7 @@ namespace Rencord.PissBot.Core
                 }
             }
             await discordClient.StartAsync();
-            await (discordClient as DiscordSocketClient).SetActivityAsync(new Discord.StreamingGame("piss", "https://www.youtube.com/renmakesmusic"));
+            await discordClient.SetActivityAsync(new StreamingGame("piss", "https://www.youtube.com/renmakesmusic"));
         }
 
         private async void Stop()
@@ -44,6 +44,6 @@ namespace Rencord.PissBot.Core
     /// </summary>
     public interface IPissDroplet
     {
-        Task Start(IDiscordClient client, CancellationToken stopToken);
+        Task Start(DiscordSocketClient client, CancellationToken stopToken);
     }
 }
