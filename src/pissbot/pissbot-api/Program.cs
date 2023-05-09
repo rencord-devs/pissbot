@@ -56,7 +56,8 @@ namespace Rencord.PissBot
             builder.Services.AddSingleton<ICommand, LookingForPissCommand>();
             builder.Services.AddSingleton<ICommand, SentencesCommand>();
             builder.Services.AddSingleton<ICommand, MiddleFingerCommand>();
-
+            builder.Services.AddSingleton<ICommand, FlipOffCommand>();
+            
             // Add services to the container.
             builder.Services.AddControllers();
             builder.Services.AddHostedService<PissBotService>();
