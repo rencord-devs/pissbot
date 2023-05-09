@@ -169,6 +169,18 @@ namespace Rencord.PissBot.Droplets
                 await ReactYes(arg);
                 return true;
             }
+            // - more than 1 hyphen
+            if (item.Count(x => x == '-') > 1)
+            {
+                await ReactNo(arg);
+                return false;
+            }
+            // - pascal casing (allow either all-caps or up to 2 caps)
+            if (item.Count(x => char.IsUpper(x)) > 2 && !item.All(x => char.IsUpper(x)))
+            {
+                await ReactNo(arg);
+                return false;
+            }
             // - decimal number
             if (decimal.TryParse(item, out _) && (allowTermination || !terminators.Contains(item.Last())))
             {
