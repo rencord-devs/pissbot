@@ -3,6 +3,7 @@ using Discord.WebSocket;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.Extensions.Options;
 using Rencord.PissBot.Core;
+using Rencord.PissBot.Persistence;
 using System.Collections.Concurrent;
 using System.Linq;
 
@@ -18,9 +19,10 @@ namespace Rencord.PissBot.Droplets
             "<:renwha:1061349950723731547>",
             "<:no:1057069758828269598>"
         };
-        private readonly IEnumerable<GuildOptions> options;
         private readonly IGuildDataPersistence guildDataStore;
-        private DiscordSocketClient socketClient;
+        private readonly ILogger<SentenceGame> logger;
+        private DiscordSocketClient? client;
+        private CancellationToken stopToken;
         private Random rand = new Random();
         private ConcurrentDictionary<ulong, SocketTextChannel> channelCache = new ConcurrentDictionary<ulong, SocketTextChannel>();
         private Dictionary<ulong, ConcurrentQueue<SocketMessage>> messageQueues = new Dictionary<ulong, ConcurrentQueue<SocketMessage>>();
@@ -28,22 +30,47 @@ namespace Rencord.PissBot.Droplets
         private string RandomNegativeResponse() =>
             negativeResponses[rand.Next(0, negativeResponses.Length)];
 
-        public SentenceGame(IOptions<List<GuildOptions>> options, IGuildDataPersistence guildDataStore)
+        public SentenceGame(IGuildDataPersistence guildDataStore, ILogger<SentenceGame> logger)
         {
-            this.options = options?.Value ?? throw new ArgumentNullException(nameof(options));
             this.guildDataStore = guildDataStore;
+            this.logger = logger;
         }
 
-        public async Task Start(IDiscordClient client, CancellationToken stopToken)
+        public Task Start(DiscordSocketClient client, CancellationToken stopToken)
         {
-            if (client is not DiscordSocketClient sc) throw new ArgumentException("client must be a socket client as the game uses events", nameof(client));
-            socketClient = sc;
-            foreach  (var guild in options) // start a processing queue consumer for each server
+            this.client = client;
+            this.stopToken = stopToken;
+            this.client.Ready += Ready;
+            return Task.CompletedTask;
+        }
+
+        private Task Ready()
+        {
+            if (client is not null)
             {
-                messageQueues.Add(guild.Id, new ConcurrentQueue<SocketMessage>());
-                _ = Task.Run(() => ProcessQueue(messageQueues[guild.Id], stopToken));
+                foreach (var guild in client.Guilds) // start a processing queue consumer for each server
+                {
+                    messageQueues.Add(guild.Id, new ConcurrentQueue<SocketMessage>());
+                    _ = Task.Run(() => ProcessQueue(messageQueues[guild.Id], stopToken));
+                }
+                this.client.MessageReceived += MessageReceived;
             }
-            socketClient.MessageReceived += MessageReceived;
+            return Task.CompletedTask;
+        }
+
+        private async Task MessageReceived(SocketMessage arg)
+        {
+            if (arg.Author.IsBot) return;
+            if (arg.Channel is not SocketTextChannel stc) return;
+
+            var guildData = await guildDataStore.GetData(stc.Guild.Id);
+            var gameConfig = guildData.GetOrAddData(() => new SentenceGameConfiguration());
+            if (!gameConfig.EnableSentenceGame) return;
+            if (arg.Channel.Id != gameConfig.GameChannel) return;
+
+            // the message is a valid game message, add it to processing queue
+            var q = messageQueues[guildData.Id];
+            q.Enqueue(arg);
         }
 
         private async Task ProcessQueue(ConcurrentQueue<SocketMessage> queue, CancellationToken cancellationToken)
@@ -58,7 +85,7 @@ namespace Rencord.PissBot.Droplets
                     }
                     catch (Exception ex)
                     {
-
+                        logger.LogError(ex, "Game error in sentence game");
                     }
                 }
                 else
@@ -68,32 +95,16 @@ namespace Rencord.PissBot.Droplets
             }
         }
 
-        private async Task MessageReceived(SocketMessage arg)
-        {
-            if (arg.Author.IsBot) return;
-            if (arg.Channel is not SocketTextChannel stc) return;
-
-            var guild = options.FirstOrDefault(x => x.Id == stc.Guild.Id);
-            if (guild == null) return;
-            if (arg.Channel.Id != guild.SentenceGame?.GameChannel) return;
-
-            // the message is a valid game message, add it to processing queue
-            var q = messageQueues[guild.Id];
-            q.Enqueue(arg);
-        }
-
         private async Task HandleGameMessage(SocketMessage arg)
         {
             if (arg.Channel is not SocketTextChannel stc) return;
-            var guild = options.FirstOrDefault(x => x.Id == stc.Guild.Id);
-            if (guild is null) return;
-
-            var gameChannel = channelCache.GetOrAdd(arg.Channel.Id, x => socketClient.GetChannel(arg.Channel.Id) is SocketTextChannel stc
+            var gameChannel = channelCache.GetOrAdd(arg.Channel.Id, x => client?.GetChannel(arg.Channel.Id) is SocketTextChannel stc
                                                                             ? stc
                                                                             : throw new NotSupportedException("not a text channel"));
             
-            var data = await guildDataStore.GetGuild(stc.Guild.Id);
-            var gameData = data.GetOrAddData(() => new SentenceGameData());
+            var guildData = await guildDataStore.GetData(stc.Guild.Id);
+            var gameData = guildData.GetOrAddData(() => new SentenceGameData());
+            var gameConfig = guildData.GetOrAddData(() => new SentenceGameConfiguration());
             if (gameData.PreviousAuthor == arg.Author.Id)
             {
                 await ReactNo(arg);
@@ -101,8 +112,11 @@ namespace Rencord.PissBot.Droplets
                 return;
             }
 
-            // if there's only this entry, don't allow it to terminate the sentence
-            var allowTermination = gameData.CurrentSentence.Count > 0;
+            // Don't allow single-word sentences.
+            var allowTermination = gameData.CurrentSentence.Count > 1 || // 2 or more existing words
+                                     (gameData.CurrentSentence.Count == 1 && // or 1 existing word and this entry contains more than just terminators (i.e. it has a 2nd word)
+                                      arg.Content.Trim().Any(c => !terminators.Contains(c)));
+
             if (!await CheckValidWord(arg, gameChannel, allowTermination)) return;
 
             gameData.PreviousAuthor = arg.Author.Id;
@@ -116,13 +130,13 @@ namespace Rencord.PissBot.Droplets
                 // end of sentence
                 gameData.SentenceCount++;
                 var result = string.Join(" ", gameData.CurrentSentence).Replace("  ", " ").Replace(" ?", "?").Replace(" .", ".").Replace(" !", "!");
-                var resultChanId = guild.SentenceGame?.ResultsChannel.HasValue == true
-                                    ? guild.SentenceGame.ResultsChannel.Value
+                var resultChanId = gameConfig.ResultsChannel.HasValue == true
+                                    ? gameConfig.ResultsChannel.Value
                                     : gameChannel.Id;
                 var resultChannel = channelCache.GetOrAdd(resultChanId,
-                                                          x => socketClient.GetChannel(resultChanId) as SocketTextChannel ?? throw new NotSupportedException("Not a text channel"));
+                                                          x => client?.GetChannel(resultChanId) as SocketTextChannel ?? throw new NotSupportedException("Not a text channel"));
 
-                var sentence = result.ToLower().Contains("piss") ? "The piss goblins have completed a new sentence!" : $"{guild.Name} has completed a new sentence!";
+                var sentence = result.ToLower().Contains("piss") ? "The piss goblins have completed a new sentence!" : $"{guildData.Name} has completed a new sentence!";
                 string message = $"**{sentence}**\r\n\r\n> {result}\r\n\r\nWritten by {string.Join(" ", gameData.SentenceAuthors)} (#{gameData.SentenceCount})";
                 if (resultChanId != gameChannel.Id)
                 {
@@ -135,7 +149,7 @@ namespace Rencord.PissBot.Droplets
                 gameData.PreviousAuthor = 0;
                 await ReactCelebrate(arg);
             }
-            await guildDataStore.SaveGuild(stc.Guild.Id);
+            await guildDataStore.SaveData(stc.Guild.Id);
         }
 
         private async Task<bool> CheckValidWord(SocketMessage arg, SocketTextChannel gameChannel, bool allowTermination)
@@ -154,6 +168,18 @@ namespace Rencord.PissBot.Droplets
             {
                 await ReactYes(arg);
                 return true;
+            }
+            // - more than 1 hyphen
+            if (item.Count(x => x == '-') > 1)
+            {
+                await ReactNo(arg);
+                return false;
+            }
+            // - pascal casing (allow either all-caps or up to 2 caps)
+            if (item.Count(x => char.IsUpper(x)) > 2 && !item.All(x => char.IsUpper(x)))
+            {
+                await ReactNo(arg);
+                return false;
             }
             // - decimal number
             if (decimal.TryParse(item, out _) && (allowTermination || !terminators.Contains(item.Last())))
