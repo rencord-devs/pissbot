@@ -70,7 +70,7 @@ namespace Rencord.PissBot.Droplets.Commands
         {
             var eb = new EmbedBuilder();
             eb.WithTitle("Sentence Game configuration")
-              .WithDescription($"The current configuration of middle finger on {guildData.Name}")
+              .WithDescription($"The current configuration of sentence game on {guildData.Name}")
               .WithFields(
                 new EmbedFieldBuilder().WithName("enabled").WithValue(config.EnableSentenceGame).WithIsInline(true),
                 new EmbedFieldBuilder().WithName("game channel").WithValue(config.GameChannel).WithIsInline(true),
