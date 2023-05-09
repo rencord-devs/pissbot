@@ -73,8 +73,8 @@ namespace Rencord.PissBot.Droplets.Commands
               .WithDescription($"The current configuration of sentence game on {guildData.Name}")
               .WithFields(
                 new EmbedFieldBuilder().WithName("enabled").WithValue(config.EnableSentenceGame).WithIsInline(true),
-                new EmbedFieldBuilder().WithName("game channel").WithValue(config.GameChannel).WithIsInline(true),
-                new EmbedFieldBuilder().WithName("results channel").WithValue(config.ResultsChannel).WithIsInline(true))
+                new EmbedFieldBuilder().WithName("game channel").WithValue(config.GameChannel.HasValue ? config.GameChannel.Value.ToString() : "none set").WithIsInline(true),
+                new EmbedFieldBuilder().WithName("results channel").WithValue(config.ResultsChannel.HasValue ? config.ResultsChannel.Value.ToString() : "none set").WithIsInline(true))
               .WithColor(Color.DarkPurple);
             await command.RespondAsync(ephemeral: true, embed: eb.Build());
             return result;
