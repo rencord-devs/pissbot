@@ -20,6 +20,7 @@ namespace Rencord.PissBot.Droplets
             "<:no:1057069758828269598>"
         };
         private readonly IGuildDataPersistence guildDataStore;
+        private readonly ILogger<SentenceGame> logger;
         private DiscordSocketClient? client;
         private CancellationToken stopToken;
         private Random rand = new Random();
@@ -29,9 +30,10 @@ namespace Rencord.PissBot.Droplets
         private string RandomNegativeResponse() =>
             negativeResponses[rand.Next(0, negativeResponses.Length)];
 
-        public SentenceGame(IGuildDataPersistence guildDataStore)
+        public SentenceGame(IGuildDataPersistence guildDataStore, ILogger<SentenceGame> logger)
         {
             this.guildDataStore = guildDataStore;
+            this.logger = logger;
         }
 
         public Task Start(DiscordSocketClient client, CancellationToken stopToken)
@@ -83,7 +85,7 @@ namespace Rencord.PissBot.Droplets
                     }
                     catch (Exception ex)
                     {
-
+                        logger.LogError(ex, "Game error in sentence game");
                     }
                 }
                 else

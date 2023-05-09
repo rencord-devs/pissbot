@@ -12,15 +12,21 @@ namespace Rencord.PissBot.Droplets
         private readonly IEnumerable<ICommand> commands;
         private readonly IGuildDataPersistence guildDataStore;
         private readonly IUserDataPersistence userDataStore;
+        private readonly ILogger<CommandManager> logger;
         private readonly DiscordBotOptions options;
         private CancellationToken stopToken;
         private DiscordSocketClient? client;
 
-        public CommandManager(IEnumerable<ICommand> commands, IGuildDataPersistence guildDataStore, IUserDataPersistence userDataStore, IOptions<DiscordBotOptions> options)
+        public CommandManager(IEnumerable<ICommand> commands,
+                              IGuildDataPersistence guildDataStore,
+                              IUserDataPersistence userDataStore,
+                              IOptions<DiscordBotOptions> options,
+                              ILogger<CommandManager> logger)
         {
             this.commands = commands ?? throw new ArgumentNullException(nameof(commands));
             this.guildDataStore = guildDataStore;
             this.userDataStore = userDataStore;
+            this.logger = logger;
             this.options = options?.Value ?? throw new ArgumentNullException(nameof(options));
         }
 
@@ -71,12 +77,20 @@ namespace Rencord.PissBot.Droplets
             var t2 = userDataStore.GetData(arg.User.Id);
             await t1; await t2;
 
-            var modified = await handler.Handle(arg, t1.Result, t2.Result);
+            try
+            {
+                var modified = await handler.Handle(arg, t1.Result, t2.Result);
 
-            Task t3 = Task.CompletedTask, t4 = Task.CompletedTask;
-            if (modified.User == DataState.Modified) t3 = userDataStore.SaveData(arg.User.Id);
-            if (modified.Guild == DataState.Modified) t4 = guildDataStore.SaveData(arg.GuildId.Value);
-            await t3; await t4;
+                Task t3 = Task.CompletedTask, t4 = Task.CompletedTask;
+                if (modified.User == DataState.Modified) t3 = userDataStore.SaveData(arg.User.Id);
+                if (modified.Guild == DataState.Modified) t4 = guildDataStore.SaveData(arg.GuildId.Value);
+                await t3; await t4;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error in command handler");
+            }
+
         }
     }
 }
