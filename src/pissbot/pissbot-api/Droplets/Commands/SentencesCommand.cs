@@ -28,7 +28,7 @@ namespace Rencord.PissBot.Droplets.Commands
         {
             var config = guildData.GetOrAddData(() => new SentenceGameConfiguration());
             var modified = DataState.Pristine;
-            if (command.Data?.Options is null) return Respond((modified, DataState.Pristine));
+            if (command.Data?.Options is null) return Respond((modified, DataState.Pristine), config, command, guildData);
             var enableOpt = command.Data.Options.FirstOrDefault(x => x.Name == EnableOption);
             if (enableOpt?.Value is bool value)
             {
@@ -60,13 +60,24 @@ namespace Rencord.PissBot.Droplets.Commands
                 config.ResultsChannel = null;
             }
 
-            return Respond((modified, DataState.Pristine));
+            return Respond((modified, DataState.Pristine), config, command, guildData);
         }
 
-        private Task<(DataState Guild, DataState User)> Respond((DataState modified, DataState Pristine) result)
+        private async Task<(DataState Guild, DataState User)> Respond((DataState modified, DataState Pristine) result,
+                                                                      SentenceGameConfiguration config,
+                                                                      SocketSlashCommand command,
+                                                                      GuildData guildData)
         {
-            // TODO implement all responds
-            throw new NotImplementedException();
+            var eb = new EmbedBuilder();
+            eb.WithTitle("Sentence Game configuration")
+              .WithDescription($"The current configuration of middle finger on {guildData.Name}")
+              .WithFields(
+                new EmbedFieldBuilder().WithName("enabled").WithValue(config.EnableSentenceGame).WithIsInline(true),
+                new EmbedFieldBuilder().WithName("game channel").WithValue(config.GameChannel).WithIsInline(true),
+                new EmbedFieldBuilder().WithName("results channel").WithValue(config.ResultsChannel).WithIsInline(true))
+              .WithColor(Color.DarkPurple);
+            await command.RespondAsync(ephemeral: true, embed: eb.Build());
+            return result;
         }
     }
 }
