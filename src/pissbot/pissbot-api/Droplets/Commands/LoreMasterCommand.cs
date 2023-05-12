@@ -16,9 +16,6 @@ namespace Rencord.PissBot.Droplets.Commands
 
         public const string EditModal = $"{nameof(LoreMasterCommand)}{nameof(EditModal)}";
         public const string WriteOption = "write";
-        public const string RolesOption = "roles";
-        public const string MemberRoleOption = "memberrole";
-        public const string MasterRoleOption = "loremasterrole";
         public const string UserOption = "user";
         public const string ChannelOption = "channel";
         public const string RoleOption = "role";
@@ -35,7 +32,7 @@ namespace Rencord.PissBot.Droplets.Commands
         public Task Configure(SlashCommandBuilder builder)
         {
             builder.WithName(Name)
-                   .WithDescription("Children of the Moon") // NOTE: 100 chars max!
+                   .WithDescription("🌖 Loremasters, build Moon Lore for your gracious followers 🌖") // NOTE: 100 chars max!
                    .WithDefaultMemberPermissions(GuildPermission.ManageChannels)
                    .AddOption(new SlashCommandOptionBuilder()
                         .WithName(WriteOption)
@@ -43,13 +40,7 @@ namespace Rencord.PissBot.Droplets.Commands
                         .WithDescription("write lore")
                         .AddOption(UserOption, ApplicationCommandOptionType.User, "the user's lore to write", isRequired: false)
                         .AddOption(ChannelOption, ApplicationCommandOptionType.Channel, "the channel's lore to write", isRequired: false)
-                        .AddOption(RoleOption, ApplicationCommandOptionType.Role, "the role's lore to write", isRequired: false))
-                   .AddOption(new SlashCommandOptionBuilder()
-                        .WithName(RolesOption)
-                        .WithType(ApplicationCommandOptionType.SubCommand)
-                        .WithDescription("set the roles required for the lore commands")
-                        .AddOption(MemberRoleOption, ApplicationCommandOptionType.Role, "the role required to write personal lore and read lore", isRequired: false)
-                        .AddOption(MasterRoleOption, ApplicationCommandOptionType.Role, "the role required for loremaster commands", isRequired: false));
+                        .AddOption(RoleOption, ApplicationCommandOptionType.Role, "the role's lore to write", isRequired: false));
             return Task.CompletedTask;
         }
 
@@ -58,45 +49,7 @@ namespace Rencord.PissBot.Droplets.Commands
             var writeOpt = command.Data.Options.FirstOrDefault(x => x.Name == WriteOption);
             if (writeOpt is not null) return WriteModal(command, guildData, userData);
 
-            var rolesOpt = command.Data.Options.FirstOrDefault(x => x.Name == RolesOption);
-            if (rolesOpt is not null) return SetRoles(command, guildData);
-
             return Task.FromResult((DataState.Pristine, DataState.Pristine));
-        }
-
-        private static async Task<(DataState Guild, DataState User)> SetRoles(SocketSlashCommand command, GuildData guildData)
-        {
-            var config = guildData.GetOrAddData(() => new LoreConfiguration());
-            var data = guildData.GetOrAddData(() => new ServerLoreData());
-
-            var userOpt = command.Data.Options.FirstOrDefault(x => x.Name == RolesOption)?.Options.FirstOrDefault(x => x.Name == MemberRoleOption);
-            if (userOpt?.Value is IRole role)
-            {
-                config.MemberRole = new RoleSummary
-                {
-                    Name = role.Name,
-                    Mention = role.Mention,
-                    Id = role.Id
-                };
-            }
-            var masterOpt = command.Data.Options.FirstOrDefault(x => x.Name == RolesOption)?.Options.FirstOrDefault(x => x.Name == MasterRoleOption);
-            if (masterOpt?.Value is IRole role2)
-            {
-                config.MasterRole = new RoleSummary
-                {
-                    Name = role2.Name,
-                    Mention = role2.Mention,
-                    Id = role2.Id
-                };
-            }
-            var embed = new EmbedBuilder()
-                .WithTitle("Moon child lore roles")
-                .WithColor(Color.DarkGrey)
-                .WithFields(new EmbedFieldBuilder()
-                    .WithName($"Member role:").WithValue(config.MemberRole?.Mention ?? "[No role has been set]"),new EmbedFieldBuilder()
-                    .WithName($"Loremaster role:").WithValue(config.MasterRole?.Mention ?? "[No role has been set]"));
-            await command.RespondAsync(embed: embed.Build(), ephemeral: true);
-            return (DataState.Modified, DataState.Pristine);
         }
 
         private async Task<(DataState Guild, DataState User)> WriteModal(SocketSlashCommand command, GuildData guildData, UserData userData)
