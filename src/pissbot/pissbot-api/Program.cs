@@ -48,15 +48,15 @@ namespace Rencord.PissBot
             builder.Services.AddSingleton<IGuildDataPersistence, CosmosDbGuildPersistence>();
             builder.Services.AddSingleton<IUserDataPersistence, CosmosDbUserPersistence>();
 
-            builder.Services.AddSingleton<IPissDroplet, CommandManager>();
-            builder.Services.AddSingleton<IPissDroplet, SentenceGame>();
-            builder.Services.AddSingleton<IPissDroplet, PissBotLookingForPiss>();
-            builder.Services.AddSingleton<IPissDroplet, MiddleFinger>();
-            
-            builder.Services.AddSingleton<ICommand, LookingForPissCommand>();
-            builder.Services.AddSingleton<ICommand, SentencesCommand>();
-            builder.Services.AddSingleton<ICommand, MiddleFingerCommand>();
-            builder.Services.AddSingleton<ICommand, FlipOffCommand>();
+            foreach (var type in typeof(Program).Assembly.GetTypes().Where(x => x.IsClass && !x.IsAbstract && x.GetInterfaces().Any(y => y == typeof(IPissDroplet))))
+            {
+                builder.Services.AddSingleton(typeof(IPissDroplet), type);
+            }
+
+            foreach (var type in typeof(Program).Assembly.GetTypes().Where(x => x.IsClass && !x.IsAbstract && x.GetInterfaces().Any(y => y == typeof(ICommand))))
+            {
+                builder.Services.AddSingleton(typeof(ICommand), type);
+            }
             
             // Add services to the container.
             builder.Services.AddControllers();

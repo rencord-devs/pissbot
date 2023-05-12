@@ -1,4 +1,6 @@
-﻿namespace Rencord.PissBot.Core
+﻿using Microsoft.Azure.Cosmos.Linq;
+
+namespace Rencord.PissBot.Core
 {
     public class GuildOptions
     {
@@ -21,6 +23,24 @@
     public class LookingForPissConfiguration
     {
         public bool EnableLookingForPiss { get; set; }
+
+        public List<PissLeagueEntry> PissLeague { get; set; } = new List<PissLeagueEntry>();
+        
+        public void AddPiss(ulong id, int pissesToAdd, string mention)
+        {
+            var existing = PissLeague.FirstOrDefault(x => x.Id == id);
+            if (existing is null)
+                PissLeague.Add(existing = new PissLeagueEntry { Id = id, Mention = mention });
+            existing.PissCount += pissesToAdd;
+            PissLeague.Sort((x, y) => y.PissCount.CompareTo(x.PissCount));
+        }
+    }
+
+    public class PissLeagueEntry
+    {
+        public ulong Id { get; set; }
+        public string Mention { get; set; } = string.Empty;
+        public int PissCount { get; set; }
     }
 
     public class MiddleFingerConfiguration
