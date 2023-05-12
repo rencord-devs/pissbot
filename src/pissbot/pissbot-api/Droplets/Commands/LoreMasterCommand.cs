@@ -113,7 +113,7 @@ namespace Rencord.PissBot.Droplets.Commands
                                             ? rd.RoleId 
                                             : data is ChannelLoreData cd 
                                                 ? cd.ChannelId
-                                                : userData.Id;
+                                                : user!.Id;
             var modalId = $"{EditModal}_{targetType}_{targetId}";
             ModalIds.Add(modalId);
 
@@ -163,8 +163,6 @@ namespace Rencord.PissBot.Droplets.Commands
                     data = guildData.GetOrAddData(() => new ServerLoreData()).RoleLore[role.Id] = new RoleLoreData { RoleId = role.Id, RoleName = role.Name };
                 }
             }
-
-            if (data is null) return (null, selectedUserData);
 
             return (data, selectedUserData);
         }

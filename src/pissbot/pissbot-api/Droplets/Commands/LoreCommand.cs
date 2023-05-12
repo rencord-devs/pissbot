@@ -132,8 +132,8 @@ namespace Rencord.PissBot.Droplets.Commands
                     .WithThumbnailUrl("https://cdn.discordapp.com/emojis/1020271842633711696.webp?size=96&quality=lossless")
                     .WithImageUrl("https://cdn.discordapp.com/emojis/1020268026764996629.webp?size=96&quality=lossless")
                     .WithFields(new EmbedFieldBuilder()
-                        .WithName($"{user.Mention}'s personal lore:").WithValue(string.IsNullOrEmpty(data?.PersonalLore) ? "[No lore has been written]" : data?.PersonalLore), new EmbedFieldBuilder()
-                        .WithName($"{user.Mention}'s moon lore:").WithValue(string.IsNullOrEmpty(data?.Lore) ? "[No lore has been written]" : data?.Lore));
+                        .WithName($"{(user is IGuildUser gu ? gu.Nickname : user.Username)}'s personal lore:").WithValue(string.IsNullOrEmpty(data?.PersonalLore) ? "[No lore has been written]" : data?.PersonalLore), new EmbedFieldBuilder()
+                        .WithName($"{(user is IGuildUser gu2 ? gu2.Nickname : user.Username)}'s moon lore:").WithValue(string.IsNullOrEmpty(data?.Lore) ? "[No lore has been written]" : data?.Lore));
                 await command.RespondAsync(embed: embed.Build());
             }
             catch (Exception ex)
