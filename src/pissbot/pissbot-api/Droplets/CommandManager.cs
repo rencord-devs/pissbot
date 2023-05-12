@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.WebSocket;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.Extensions.Options;
 using Rencord.PissBot.Core;
 using Rencord.PissBot.Droplets.Commands;
@@ -64,6 +65,36 @@ namespace Rencord.PissBot.Droplets
                 }
             }
             client.SlashCommandExecuted += CommandExecuted;
+            client.ModalSubmitted += ModalSubmitted;
+        }
+
+        private async Task ModalSubmitted(SocketModal modal)
+        {
+            if (stopToken.IsCancellationRequested) return;
+            if (!modal.GuildId.HasValue) return;
+            var handler = commands.Where(x => x is IModalCommand).Cast<IModalCommand>().FirstOrDefault(x => x.ModalIds?.Contains(modal.Data.CustomId) == true);
+            if (handler is null) return;
+
+            var t1 = guildDataStore.GetData(modal.GuildId.Value);
+            var t2 = userDataStore.GetData(modal.User.Id);
+            await t1; await t2;
+
+            try
+            {
+                var modified = await handler.HandleModal(modal, t1.Result, t2.Result);
+                if (!modal.HasResponded)
+                {
+                    await modal.DeferAsync(ephemeral: true);
+                }
+                Task t3 = Task.CompletedTask, t4 = Task.CompletedTask;
+                if (modified.User == DataState.Modified) t3 = userDataStore.SaveData(modal.User.Id);
+                if (modified.Guild == DataState.Modified) t4 = guildDataStore.SaveData(modal.GuildId.Value);
+                await t3; await t4;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error in command modal handler");
+            }
         }
 
         private async Task CommandExecuted(SocketSlashCommand arg)
