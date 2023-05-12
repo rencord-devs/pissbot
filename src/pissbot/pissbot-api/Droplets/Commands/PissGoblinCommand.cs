@@ -62,6 +62,7 @@ namespace Rencord.PissBot.Droplets.Commands
             var eb = new EmbedBuilder();
             eb.WithTitle("Piss Goblin League Table")
               .WithDescription($"The top ranked piss-saying Piss-Goblins")
+              .WithThumbnailUrl("https://cdn.discordapp.com/emojis/1000806527965347922.webp?size=96&quality=lossless")
               .WithFields(
                 new EmbedFieldBuilder().WithName("rank").WithValue(rank.ToString()).WithIsInline(true),
                 new EmbedFieldBuilder().WithName("piss count").WithValue(count.ToString()).WithIsInline(true),
