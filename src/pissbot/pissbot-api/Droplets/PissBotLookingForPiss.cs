@@ -45,6 +45,7 @@ namespace Rencord.PissBot.Droplets
 
             if (arg.Content is not null && arg.Content.ToLower().Contains("piss"))
             {
+                "piss".Split("piss", StringSplitOptions.None);
                 var user = stc.Guild.GetUser(arg.Author.Id);
                 if (user?.Roles is null || !user.Roles.Any(x => x.Name?.ToLower().Contains("piss") == true)) return;
                 try
@@ -55,6 +56,8 @@ namespace Rencord.PissBot.Droplets
                 {
                     await arg.AddReactionAsync(Emote.Parse("<:notp:1104541579521306684>"));
                 }
+                config.AddPiss(user.Id, arg.Content.ToLower().Split("piss").Length - 1, user.Mention);
+                await guildDataStore.SaveData(guild.Id);
             }
         }
     }
