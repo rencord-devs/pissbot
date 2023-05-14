@@ -79,14 +79,19 @@ namespace Rencord.PissBot.Droplets.Commands
                 data.RoleLore[role.Id] = roleLore = new RoleLoreData{ RoleId = role.Id, RoleName = role.Name };
             }
 
+            var usePost = roleLore?.Lore?.Length > 1024;
             var embed = new EmbedBuilder()
                 .WithTitle("Moon child lore")
                 .WithColor(Color.DarkGrey)
                 .WithThumbnailUrl("https://cdn.discordapp.com/emojis/1020271842633711696.webp?size=96&quality=lossless")
-                .WithImageUrl("https://cdn.discordapp.com/emojis/1020268026764996629.webp?size=96&quality=lossless")
-                .WithFields(new EmbedFieldBuilder()
-                    .WithName($"{role.Name}'s moon lore:").WithValue(roleLore?.Lore ?? "[No lore has been written]"));
-            await command.RespondAsync(embed: embed.Build());
+                .WithImageUrl("https://cdn.discordapp.com/emojis/1020268026764996629.webp?size=96&quality=lossless");
+            if (!usePost)
+            {
+                embed.WithFields(new EmbedFieldBuilder()
+                                    .WithName($"{role.Name}'s moon lore:")
+                                    .WithValue(roleLore?.Lore ?? "[No lore has been written]"));
+            }
+            await command.RespondAsync(embed: embed.Build(), text: usePost ? $"**{role.Name}'s moon lore**\r\n> {roleLore?.Lore?.Replace("\n", "\n> ")}" : null);
 
             return (DataState.Modified, DataState.Pristine);
         }
@@ -103,14 +108,20 @@ namespace Rencord.PissBot.Droplets.Commands
                 saveTask = guildDataStore.SaveData(command.GuildId!.Value); // awaited later, run in parallel with sending reponse
             }
 
+            var usePost = chanLore?.Lore?.Length > 1024;
             var embed = new EmbedBuilder()
                 .WithTitle("Moon child lore")
                 .WithColor(Color.DarkGrey)
                 .WithThumbnailUrl("https://cdn.discordapp.com/emojis/1020271842633711696.webp?size=96&quality=lossless")
-                .WithImageUrl("https://cdn.discordapp.com/emojis/1020268026764996629.webp?size=96&quality=lossless")
-                .WithFields(new EmbedFieldBuilder()
-                    .WithName($"{chan.Name}'s moon lore:").WithValue(chanLore?.Lore ?? "[No lore has been written]"));
-            await command.RespondAsync(embed: embed.Build());
+                .WithImageUrl("https://cdn.discordapp.com/emojis/1020268026764996629.webp?size=96&quality=lossless");
+            if (!usePost)
+            {
+                embed.WithFields(new EmbedFieldBuilder()
+                                    .WithName($"{chan.Name}'s moon lore:")
+                                    .WithValue(chanLore?.Lore ?? "[No lore has been written]"));
+            }
+
+            await command.RespondAsync(embed: embed.Build(), text: usePost ? $"**{chan.Name}'s moon lore**\r\n> {chanLore?.Lore?.Replace("\n", "\n> ")}" : null);
             await saveTask;
 
             return (DataState.Pristine, DataState.Pristine);
@@ -130,11 +141,19 @@ namespace Rencord.PissBot.Droplets.Commands
                     .WithTitle("Moon child lore")
                     .WithColor(Color.DarkGrey)
                     .WithThumbnailUrl("https://cdn.discordapp.com/emojis/1020271842633711696.webp?size=96&quality=lossless")
-                    .WithImageUrl("https://cdn.discordapp.com/emojis/1020268026764996629.webp?size=96&quality=lossless")
-                    .WithFields(new EmbedFieldBuilder()
-                        .WithName($"{(user is IGuildUser gu && !string.IsNullOrWhiteSpace(gu.Nickname) ? gu.Nickname : user.Username)}'s personal lore:").WithValue(string.IsNullOrEmpty(data?.PersonalLore) ? "[No lore has been written]" : data?.PersonalLore), new EmbedFieldBuilder()
-                        .WithName($"{(user is IGuildUser gu2 && !string.IsNullOrWhiteSpace(gu2.Nickname) ? gu2.Nickname : user.Username)}'s moon lore:").WithValue(string.IsNullOrEmpty(data?.Lore) ? "[No lore has been written]" : data?.Lore));
-                await command.RespondAsync(embed: embed.Build());
+                    .WithImageUrl("https://cdn.discordapp.com/emojis/1020268026764996629.webp?size=96&quality=lossless");
+                        
+            var usePost = data?.Lore?.Length > 1024 || data?.PersonalLore?.Length > 1024;
+            if (!usePost)
+            {
+                embed.WithFields(new EmbedFieldBuilder()
+                        .WithName($"{(user is IGuildUser gu3 && !string.IsNullOrWhiteSpace(gu3.Nickname) ? gu3.Nickname : user.Username)}'s personal lore:").WithValue(string.IsNullOrEmpty(data?.PersonalLore) ? "[No lore has been written]" : data?.PersonalLore), new EmbedFieldBuilder()
+                        .WithName($"{(user is IGuildUser gu4 && !string.IsNullOrWhiteSpace(gu4.Nickname) ? gu4.Nickname : user.Username)}'s moon lore:").WithValue(string.IsNullOrEmpty(data?.Lore) ? "[No lore has been written]" : data?.Lore));
+            }
+
+            await command.RespondAsync(
+                embed: embed.Build(), 
+                text: usePost ? $"**{(user is IGuildUser gu && !string.IsNullOrWhiteSpace(gu.Nickname) ? gu.Nickname : user.Username)}'s personal lore**\r\n> {data?.PersonalLore.Replace("\n", "\n> ")}\r\n\r\n**{(user is IGuildUser gu2 && !string.IsNullOrWhiteSpace(gu2.Nickname) ? gu2.Nickname : user.Username)}'s moon lore**\r\n> {data?.Lore.Replace("\n", "\n> ")}" : null);
             }
             catch (Exception ex)
             {

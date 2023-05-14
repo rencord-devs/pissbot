@@ -1,3 +1,4 @@
+using System.Globalization;
 using Discord;
 using Discord.WebSocket;
 using Rencord.PissBot.Core;
@@ -66,7 +67,14 @@ namespace Rencord.PissBot.Droplets.Commands
                                             ? rd.RoleId 
                                             : data is ChannelLoreData cd 
                                                 ? cd.ChannelId
-                                                : user!.Id;
+                                                : user?.Id;
+
+            if (targetId is null)
+            {
+                await command.RespondAsync(ephemeral: true, text: "You must select either a user, role or channel when writing the command");
+                return (DataState.Pristine, DataState.Pristine);
+            }
+
             var modalId = $"{EditModal}_{targetType}_{targetId}";
             ModalIds.Add(modalId);
 
