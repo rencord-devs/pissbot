@@ -91,7 +91,7 @@ namespace Rencord.PissBot.Droplets.Commands
                                     .WithName($"{role.Name}'s moon lore:")
                                     .WithValue(roleLore?.Lore ?? "[No lore has been written]"));
             }
-            await command.RespondAsync(embed: embed.Build(), text: usePost ? $"**{role.Name}'s moon lore**\r\n> {roleLore?.Lore?.Replace("\n", "\n> ")}" : null);
+            await command.RespondAsync(embed: embed.Build(), text: usePost ? $"> **{role.Name}'s moon lore**\r\n>  \r\n> {roleLore?.Lore?.Replace("\n", "\n> ")}  " : null);
 
             return (DataState.Modified, DataState.Pristine);
         }
@@ -121,7 +121,7 @@ namespace Rencord.PissBot.Droplets.Commands
                                     .WithValue(chanLore?.Lore ?? "[No lore has been written]"));
             }
 
-            await command.RespondAsync(embed: embed.Build(), text: usePost ? $"**{chan.Name}'s moon lore**\r\n> {chanLore?.Lore?.Replace("\n", "\n> ")}" : null);
+            await command.RespondAsync(embed: embed.Build(), text: usePost ? $"> **{chan.Name}'s moon lore**\r\n>  \r\n> {chanLore?.Lore?.Replace("\n", "\n> ")}  " : null);
             await saveTask;
 
             return (DataState.Pristine, DataState.Pristine);
@@ -153,7 +153,7 @@ namespace Rencord.PissBot.Droplets.Commands
 
             await command.RespondAsync(
                 embed: embed.Build(), 
-                text: usePost ? $"**{(user is IGuildUser gu && !string.IsNullOrWhiteSpace(gu.Nickname) ? gu.Nickname : user.Username)}'s personal lore**\r\n> {data?.PersonalLore.Replace("\n", "\n> ")}\r\n\r\n**{(user is IGuildUser gu2 && !string.IsNullOrWhiteSpace(gu2.Nickname) ? gu2.Nickname : user.Username)}'s moon lore**\r\n> {data?.Lore.Replace("\n", "\n> ")}" : null);
+                text: usePost ? $"> **{(user is IGuildUser gu && !string.IsNullOrWhiteSpace(gu.Nickname) ? gu.Nickname : user.Username)}'s personal lore**\r\n> \r\n> {data?.PersonalLore?.Trim().Replace("\n", "\n> ")}  \r\n>  \r\n> **{(user is IGuildUser gu2 && !string.IsNullOrWhiteSpace(gu2.Nickname) ? gu2.Nickname : user.Username)}'s moon lore**\r\n>  \r\n> {data?.Lore?.Trim().Replace("\n", "\n> ")}  " : null);
             }
             catch (Exception ex)
             {
