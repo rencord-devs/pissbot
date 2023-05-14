@@ -78,10 +78,12 @@ namespace Rencord.PissBot.Droplets.Commands
             var modalId = $"{EditModal}_{targetType}_{targetId}";
             ModalIds.Add(modalId);
 
+            if (data?.Lore?.Length > 1900) data.Lore = data.Lore.Substring(0, 1900);
+
             var modal = new ModalBuilder()
                 .WithTitle("Moon child lore")
                 .WithCustomId(modalId)
-                .AddTextInput($"Lore for {data?.Name ?? user?.GuildUserName ?? guildData.Name}:", LoreValue, TextInputStyle.Paragraph, value: data?.Lore ?? string.Empty, required: false, maxLength: 4000);
+                .AddTextInput($"Lore for {data?.Name ?? user?.GuildUserName ?? guildData.Name}:", LoreValue, TextInputStyle.Paragraph, value: data?.Lore ?? string.Empty, required: false, maxLength: 1900);
             await command.RespondWithModalAsync(modal.Build());
 
             return (DataState.Pristine, DataState.Pristine);
