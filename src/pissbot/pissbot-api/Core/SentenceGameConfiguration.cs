@@ -20,6 +20,11 @@ namespace Rencord.PissBot.Core
         public bool EnableSentenceGame { get; set; }
     }
 
+    public class GubGubConfiguration
+    {
+        public bool EnableGubGub { get; set; } = true;
+    }
+
     public class LookingForPissConfiguration
     {
         public bool EnableLookingForPiss { get; set; }

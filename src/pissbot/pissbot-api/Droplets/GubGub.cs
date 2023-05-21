@@ -1,21 +1,17 @@
 ﻿using Discord;
 using Discord.WebSocket;
-using Microsoft.Extensions.Options;
 using Rencord.PissBot.Core;
 using Rencord.PissBot.Persistence;
-using System.Diagnostics;
-using System.Globalization;
 
 namespace Rencord.PissBot.Droplets
 {
-
-    public class PissBotLookingForPiss : IPissDroplet
+    public class GubGub : IPissDroplet
     {
         private readonly IGuildDataPersistence guildDataStore;
         private CancellationToken stopToken;
         private DiscordSocketClient? client;
 
-        public PissBotLookingForPiss(IGuildDataPersistence guildDataStore)
+        public GubGub(IGuildDataPersistence guildDataStore)
         {
             this.guildDataStore = guildDataStore;
         }
@@ -40,23 +36,20 @@ namespace Rencord.PissBot.Droplets
             if (arg.Author.IsBot) return;
             if (arg.Channel is not SocketTextChannel stc) return;
             var guild = await guildDataStore.GetData(stc.Guild.Id);
-            var config = guild.GetOrAddData(() => new LookingForPissConfiguration());
-            if (!config.EnableLookingForPiss) return;
+            var config = guild.GetOrAddData(() => new GubGubConfiguration());
+            if (!config.EnableGubGub) return;
 
-            if (arg.Content is not null && arg.Content.ToLower().Contains("piss"))
+            var content = arg.Content?.ToLower();
+            if (content is not null && (content.Contains("gub-gub") || content.Contains("gub gub") || content.Contains("gubgub")))
             {
-                var user = stc.Guild.GetUser(arg.Author.Id);
-                if (user?.Roles is null || !user.Roles.Any(x => x.Name?.ToLower().Contains("piss") == true)) return;
                 try
                 {
-                    await arg.AddReactionAsync(Emote.Parse("<:notp:1000806527965347922>"));
+                    await arg.AddReactionAsync(Emote.Parse("<:letsgo:1020270999037554719>"));
                 }
                 catch
                 {
-                    await arg.AddReactionAsync(Emote.Parse("<:notp:1104541579521306684>"));
+                    await arg.AddReactionAsync(Emote.Parse("😯"));
                 }
-                config.AddPiss(user.Id, arg.Content.ToLower().Split("piss").Length - 1, user.Mention);
-                await guildDataStore.SaveData(guild.Id);
             }
         }
     }
