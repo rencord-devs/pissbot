@@ -46,9 +46,16 @@ namespace Rencord.PissBot.Droplets
                 {
                     await arg.AddReactionAsync(Emote.Parse("<:letsgo:1020270999037554719>"));
                 }
-                catch
+                catch (Exception ex)
                 {
-                    await arg.AddReactionAsync(Emote.Parse("😯"));
+                    try
+                    {
+                        await arg.AddReactionAsync(Emoji.Parse("😯"));
+                    }
+                    catch (Exception ex2)
+                    {
+
+                    }
                 }
             }
         }
