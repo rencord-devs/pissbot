@@ -56,3 +56,14 @@ jobs:
           slot-name: 'Production'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_D30B3BEBF9D744CBBC78182A291787E0 }}
           package: .
+      - name: Wait for Azure to do things
+        uses: AliSajid/random-wait-action@v1.1.0
+        with:
+          minimum: 15
+          maximum: 20
+      - name: Wake-Up Ping
+        uses: fjogeleit/http-request-action@v1.14.0
+        with:
+          url: 'pissbot-test.azurewebsites.net/admin'
+          method: 'GET'
+
