@@ -50,6 +50,7 @@ namespace Rencord.PissBot.Droplets
             var guild = await guildDataStore.GetData(stc.Guild.Id);
             var config = guild.GetOrAddData(() => new LookingForPissConfiguration());
             if (!config.EnableLookingForPiss) return;
+            if (config.ExcludedChannels.Any(x => x.Id == stc.Id)) return;
 
             if (arg.Content is not null && arg.Content.ToLower().Contains("piss"))
             {

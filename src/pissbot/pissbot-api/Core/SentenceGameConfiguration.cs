@@ -25,9 +25,17 @@ namespace Rencord.PissBot.Core
         public bool EnableGubGub { get; set; } = true;
     }
 
+    public class ChannelSummary
+    {
+        public ulong Id { get; set; }
+        public string? Name { get; set; }
+    }
+
     public class LookingForPissConfiguration
     {
         public bool EnableLookingForPiss { get; set; }
+
+        public List<ChannelSummary> ExcludedChannels { get; set; } = new List<ChannelSummary>();
 
         public List<PissLeagueEntry> PissLeague { get; set; } = new List<PissLeagueEntry>();
         
