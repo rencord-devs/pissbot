@@ -82,6 +82,8 @@ namespace Rencord.PissBot.Droplets.Commands
                 list = new string(fullList.Take(1000).ToArray());
                 list += "...";
             }
+            if (string.IsNullOrWhiteSpace(list))
+                list = "[no watch terms]";
             eb.WithTitle("RenWatch configuration")
               .WithDescription($"The current configuration of PissBot RenWatch on {guildData.Name}")
               .WithFields(
