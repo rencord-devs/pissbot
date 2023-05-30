@@ -35,8 +35,17 @@ namespace Rencord.PissBot.Droplets
         {
             this.stopToken = stopToken;
             this.client = client;
+            stopToken.Register(Stop);
             client.Ready += Ready;
             return Task.CompletedTask;
+        }
+
+        private void Stop()
+        {
+            if (this.client is null) return;
+            this.client.Ready -= Ready;
+            this.client.SlashCommandExecuted -= CommandExecuted;
+            this.client.ModalSubmitted -= ModalSubmitted;
         }
 
         private async Task Ready()
