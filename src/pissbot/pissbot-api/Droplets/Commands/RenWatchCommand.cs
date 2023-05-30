@@ -75,11 +75,18 @@ namespace Rencord.PissBot.Droplets.Commands
                                                                       GuildData guildData)
         {
             var eb = new EmbedBuilder();
+            var fullList = string.Join(", ", config.WatchTerms);
+            var list = fullList;
+            if (fullList.Length > 1000)
+            {
+                list = new string(fullList.Take(1000).ToArray());
+                list += "...";
+            }
             eb.WithTitle("RenWatch configuration")
               .WithDescription($"The current configuration of PissBot RenWatch on {guildData.Name}")
               .WithFields(
                 new EmbedFieldBuilder().WithName("enabled").WithValue(config.EnableRenWatch).WithIsInline(true),
-                new EmbedFieldBuilder().WithName("terms").WithValue(string.Join(", ", config.WatchTerms)).WithIsInline(false))
+                new EmbedFieldBuilder().WithName("terms").WithValue(list).WithIsInline(false))
               .WithColor(Color.DarkPurple);
             await command.RespondAsync(ephemeral: true, embed: eb.Build());
             return result;
