@@ -64,6 +64,7 @@ jobs:
       - name: Wake-Up Ping
         uses: fjogeleit/http-request-action@v1.14.0
         with:
-          url: 'pissbot-test.azurewebsites.net/admin'
+          url: 'https://pissbot-test.azurewebsites.net/admin'
           method: 'GET'
+          timeout: 30000
 
