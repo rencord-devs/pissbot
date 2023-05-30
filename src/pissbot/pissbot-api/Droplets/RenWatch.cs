@@ -1,21 +1,17 @@
 ﻿using Discord;
 using Discord.WebSocket;
-using Microsoft.Extensions.Options;
 using Rencord.PissBot.Core;
 using Rencord.PissBot.Persistence;
-using System.Diagnostics;
-using System.Globalization;
 
 namespace Rencord.PissBot.Droplets
 {
-
-    public class PissBotLookingForPiss : IPissDroplet
+    public class RenWatch : IPissDroplet
     {
         private readonly IGuildDataPersistence guildDataStore;
         private CancellationToken stopToken;
         private DiscordSocketClient? client;
 
-        public PissBotLookingForPiss(IGuildDataPersistence guildDataStore)
+        public RenWatch(IGuildDataPersistence guildDataStore)
         {
             this.guildDataStore = guildDataStore;
         }
@@ -48,24 +44,38 @@ namespace Rencord.PissBot.Droplets
             if (arg.Author.IsBot) return;
             if (arg.Channel is not SocketTextChannel stc) return;
             var guild = await guildDataStore.GetData(stc.Guild.Id);
-            var config = guild.GetOrAddData(() => new LookingForPissConfiguration());
-            if (!config.EnableLookingForPiss) return;
-            if (config.ExcludedChannels.Any(x => x.Id == stc.Id)) return;
+            var config = guild.GetOrAddData(() => new RenWatchConfiguration());
+            if (!config.EnableRenWatch) return;
 
-            if (arg.Content is not null && arg.Content.ToLower().Contains("piss"))
+            var content = arg.Content?.ToLower();
+            if (content is not null && config.WatchTerms.Any(y => content.Contains(y)))
             {
-                var user = stc.Guild.GetUser(arg.Author.Id);
-                if (user?.Roles is null || !user.Roles.Any(x => x.Name?.ToLower().Contains("piss") == true)) return;
                 try
                 {
-                    await arg.AddReactionAsync(Emote.Parse("<:notp:1000806527965347922>"));
+                    await arg.AddReactionAsync(Emote.Parse("<:letsgo:1020270999037554719>"));
                 }
-                catch
+                catch (Exception ex)
                 {
-                    await arg.AddReactionAsync(Emote.Parse("<:notp:1104541579521306684>"));
+                    try
+                    {
+                        await arg.AddReactionAsync(Emoji.Parse("😯"));
+                    }
+                    catch (Exception ex2)
+                    {
+
+                    }
                 }
-                config.AddPiss(user.Id, arg.Content.ToLower().Split("piss").Length - 1, user.Mention);
-                await guildDataStore.SaveData(guild.Id);
+            }
+            if (content is not null && content.Contains("i love ren"))
+            {
+                try
+                {
+                    await arg.Channel.SendMessageAsync("> I love Ren\r\n\r\nAs do we all, my friend. As do we all.", messageReference: arg.Reference);
+                }
+                catch (Exception ex2)
+                {
+
+                }
             }
         }
     }

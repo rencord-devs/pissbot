@@ -51,7 +51,7 @@ namespace Rencord.PissBot.Droplets.Commands
             var count = new StringBuilder();
             var mention = new StringBuilder();
             var i = 0;
-            foreach (var pg in config.PissLeague)
+            foreach (var pg in config.PissLeague.Take(20))
             {
                 i++;
                 rank.AppendLine(i.ToString());
@@ -61,7 +61,7 @@ namespace Rencord.PissBot.Droplets.Commands
             }
             var eb = new EmbedBuilder();
             eb.WithTitle("Piss Goblin League Table")
-              .WithDescription($"The top ranked piss-saying Piss-Goblins")
+              .WithDescription($"The top 20 ranked piss-saying Piss-Goblins")
               .WithThumbnailUrl("https://cdn.discordapp.com/emojis/1000806527965347922.webp?size=96&quality=lossless")
               .WithFields(
                 new EmbedFieldBuilder().WithName("rank").WithValue(rank.ToString()).WithIsInline(true),
