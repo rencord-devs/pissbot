@@ -45,9 +45,9 @@ namespace Rencord.PissBot.Droplets.Commands
             if (config.WatchTerms.Contains(term.ToLower()))
             {
                 config.WatchTerms.Remove(term.ToLower());
-                return Task.FromResult((DataState.Modified, DataState.Pristine));
+                return Respond((DataState.Modified, DataState.Pristine), config, command, guildData);
             }
-            return Task.FromResult((DataState.Pristine, DataState.Pristine));
+            return Respond((DataState.Pristine, DataState.Pristine), config, command, guildData);
         }
 
         private Task<(DataState Guild, DataState User)> AddTerm(SocketSlashCommand command, GuildData guildData, RenWatchConfiguration config, string term)
@@ -55,9 +55,9 @@ namespace Rencord.PissBot.Droplets.Commands
             if (!config.WatchTerms.Contains(term.ToLower()))
             {
                 config.WatchTerms.Add(term.ToLower());
-                return Task.FromResult((DataState.Modified, DataState.Pristine));
+                return Respond((DataState.Modified, DataState.Pristine), config, command, guildData);
             }
-            return Task.FromResult((DataState.Pristine, DataState.Pristine));
+            return Respond((DataState.Pristine, DataState.Pristine), config, command, guildData);
         }
 
         private Task<(DataState Guild, DataState User)> ToggleEnable(SocketSlashCommand command, GuildData guildData, RenWatchConfiguration config, bool value)

@@ -49,7 +49,7 @@ namespace Rencord.PissBot.Droplets.Commands
         private Task<(DataState Guild, DataState User)> UnexcludeChannel(SocketSlashCommand command, GuildData guildData, LookingForPissConfiguration config, IChannel channel)
         {
             var removed = config.ExcludedChannels.RemoveAll(x => x.Id == channel.Id);
-            return Task.FromResult((removed > 0 ? DataState.Modified : DataState.Pristine, DataState.Pristine));
+            return Respond((removed > 0 ? DataState.Modified : DataState.Pristine, DataState.Pristine), config, command, guildData);
         }
 
         private Task<(DataState Guild, DataState User)> ExcludeChannel(SocketSlashCommand command, GuildData guildData, LookingForPissConfiguration config, IChannel channel)
@@ -57,9 +57,9 @@ namespace Rencord.PissBot.Droplets.Commands
             if (!config.ExcludedChannels.Any(x => x.Id == channel.Id))
             {
                 config.ExcludedChannels.Add(new ChannelSummary { Id = channel.Id, Name = channel.Name });
-                return Task.FromResult((DataState.Modified, DataState.Pristine));
+                return Respond((DataState.Modified, DataState.Pristine), config, command, guildData);
             }
-            return Task.FromResult((DataState.Pristine, DataState.Pristine));
+            return Respond((DataState.Pristine, DataState.Pristine), config, command, guildData);
         }
 
         private Task<(DataState Guild, DataState User)> ToggleEnable(SocketSlashCommand command, GuildData guildData, LookingForPissConfiguration config, bool value)
@@ -81,7 +81,7 @@ namespace Rencord.PissBot.Droplets.Commands
               .WithDescription($"The current configuration of PissBot looking for piss on {guildData.Name}")
               .WithFields(
                 new EmbedFieldBuilder().WithName("enabled").WithValue(config.EnableLookingForPiss).WithIsInline(true),
-                new EmbedFieldBuilder().WithName("excluded").WithValue(string.Join(", ", config.ExcludedChannels.Select(x => x.Name))).WithIsInline(false))
+                new EmbedFieldBuilder().WithName("excluded").WithValue(string.Join(", ", config.ExcludedChannels.Where(x => x.Name is not null).Select(x => x.Name))).WithIsInline(false))
               .WithColor(Color.DarkPurple);
             await command.RespondAsync(ephemeral: true, embed: eb.Build());
             return result;

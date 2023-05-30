@@ -105,12 +105,13 @@ namespace Rencord.PissBot.Core
 
     public class LookingForPissConfiguration
     {
+        private List<ChannelSummary> excludedChannels = new List<ChannelSummary>();
+
         public bool EnableLookingForPiss { get; set; }
 
-        public List<ChannelSummary> ExcludedChannels { get; set; } = new List<ChannelSummary>();
-
+        public List<ChannelSummary> ExcludedChannels { get => excludedChannels; set => excludedChannels = value ?? new List<ChannelSummary>(); }
         public List<PissLeagueEntry> PissLeague { get; set; } = new List<PissLeagueEntry>();
-        
+
         public void AddPiss(ulong id, int pissesToAdd, string mention)
         {
             var existing = PissLeague.FirstOrDefault(x => x.Id == id);
