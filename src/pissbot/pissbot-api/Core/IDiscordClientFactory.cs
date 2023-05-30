@@ -7,6 +7,8 @@ namespace Rencord.PissBot.Core
 {
     public interface IDiscordClientFactory
     {
+        Task DisposeClient();
         Task<DiscordSocketClient> GetClient();
+        Task<DiscordSocketClient> InitialiseClient();
     }
 }

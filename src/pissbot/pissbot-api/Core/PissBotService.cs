@@ -19,8 +19,8 @@ namespace Rencord.PissBot.Core
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            stoppingToken.Register(Stop);
-            discordClient ??= await discordClientFactory.GetClient();
+            if (discordClient is not null) return;
+            discordClient = await discordClientFactory.InitialiseClient();
             if (pissDroplets?.Any() == true)
             {
                 foreach (var droplet in pissDroplets)
@@ -28,15 +28,13 @@ namespace Rencord.PissBot.Core
                     await droplet.Start(discordClient, stoppingToken);
                 }
             }
+            stoppingToken.Register(Stop); // register this callback after the droplets register theirs, so it is called last when the delegates are invoked
             await discordClient.StartAsync();
             await discordClient.SetActivityAsync(new StreamingGame("piss", "https://www.youtube.com/renmakesmusic"));
         }
 
-        private async void Stop()
-        {
-            if (discordClient is null) return;
-            await discordClient.StopAsync();
-        }
+        private void Stop() =>
+            discordClientFactory.DisposeClient().Wait();
     }
 
     /// <summary>
