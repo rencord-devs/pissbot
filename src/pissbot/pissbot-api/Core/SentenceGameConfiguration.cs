@@ -25,6 +25,78 @@ namespace Rencord.PissBot.Core
         public bool EnableGubGub { get; set; } = true;
     }
 
+    public class RenWatchConfiguration
+    {
+        private static List<string> DefaultTerms = new List<string>
+        {
+            "animal flow",
+            "illest of our time",
+            "sick boi",
+            "hi ren",
+            "what you want",
+            "genesis",
+            "the hunger",
+            "violet's tale",
+            "violets tale",
+            "screech's tale",
+            "screechs tale",
+            "screeches tale",
+            "jenny's tale",
+            "jennys tale",
+            "power",
+            "chalk outlines",
+            "ready for you",
+            "diazepam",
+            "heretic",
+            "crucify your culture",
+            "everybody drops",
+            "penitence",
+            "depression",
+            "insomnia",
+            "life is funny",
+            "love music",
+            "money game",
+            "french song",
+            "dear god",
+            "hold on",
+            "ahiahiahohah",
+            "ocean",
+            "how to be me",
+            "humble",
+            "blind eyed",
+            "children of the moon",
+            "blind eyed",
+            "girls!",
+            "dominoes",
+            "jessica",
+            "make my way",
+            "it's alright",
+            "its alright",
+            "satellite girl",
+            "1990s",
+            "pixie",
+            "street lights",
+            "run away",
+            "pocket full of pain",
+            "meaning",
+            "bullet",
+            "fire",
+            "crutch",
+            "freckled angels",
+            "patience",
+            "fisher retake",
+            "fatboy slim retake",
+            "the verve retake",
+            "foo fighters retake",
+            "sbtrkt retake"
+
+        };
+        private List<string>? watchTerms;
+
+        public bool EnableRenWatch { get; set; } = true;
+        public List<string> WatchTerms { get => watchTerms ?? DefaultTerms; set => watchTerms = value; }
+    }
+
     public class ChannelSummary
     {
         public ulong Id { get; set; }

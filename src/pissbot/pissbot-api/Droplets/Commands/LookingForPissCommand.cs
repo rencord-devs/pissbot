@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Newtonsoft.Json.Linq;
 using Rencord.PissBot.Core;
+using System.Linq;
 using System.Security.Authentication.ExtendedProtection;
 using System.Threading.Channels;
 
@@ -23,7 +24,7 @@ namespace Rencord.PissBot.Droplets.Commands
         public Task Configure(SlashCommandBuilder builder)
         {
             builder.WithName(Name)
-                   .WithDescription("Enable/disable piss reacts and manage excluded channels") // NOTE: 100 chars max!
+                   .WithDescription("Enable/disable piss reacts and manage excluded channels (use 1 option at a time)") // NOTE: 100 chars max!
                    .WithDefaultMemberPermissions(GuildPermission.ManageChannels)
                    .AddOption(EnableOption, ApplicationCommandOptionType.Boolean, "enable or disable the piss reaccs", isRequired: false)
                    .AddOption(ExcludeChannelOption, ApplicationCommandOptionType.Channel, "exclude a channel from reactions", isRequired: false)
@@ -33,17 +34,14 @@ namespace Rencord.PissBot.Droplets.Commands
 
         public Task<(DataState Guild, DataState User)> Handle(SocketSlashCommand command, GuildData guildData, UserData userData)
         {
-            var opt = command.Data.Options.First(x => x.Name == EnableOption);
+            var opt = command.Data.Options.FirstOrDefault();
             var config = guildData.GetOrAddData(() => new LookingForPissConfiguration());
 
-            return opt.Value switch
+            return opt?.Value switch
             {
-                bool value when command.Data.Options.Any(x => x.Name == EnableOption) => 
-                    ToggleEnable(command, guildData, config, value),
-                IChannel channel when command.Data.Options.Any(x => x.Name == ExcludeChannelOption) =>
-                    ExcludeChannel(command, guildData, config, channel),
-                IChannel channel when command.Data.Options.Any(x => x.Name == RemoveExcludeOption) =>
-                    UnexcludeChannel(command, guildData, config, channel),
+                bool value when opt.Name == EnableOption => ToggleEnable(command, guildData, config, value),
+                IChannel channel when opt.Name == ExcludeChannelOption => ExcludeChannel(command, guildData, config, channel),
+                IChannel channel when opt.Name == RemoveExcludeOption => UnexcludeChannel(command, guildData, config, channel),
                 _ => Respond((DataState.Pristine, DataState.Pristine), config, command, guildData)
             };
         }
@@ -82,7 +80,8 @@ namespace Rencord.PissBot.Droplets.Commands
             eb.WithTitle("Loooking for Piss configuration")
               .WithDescription($"The current configuration of PissBot looking for piss on {guildData.Name}")
               .WithFields(
-                new EmbedFieldBuilder().WithName("enabled").WithValue(config.EnableLookingForPiss).WithIsInline(true))
+                new EmbedFieldBuilder().WithName("enabled").WithValue(config.EnableLookingForPiss).WithIsInline(true),
+                new EmbedFieldBuilder().WithName("excluded").WithValue(string.Join(", ", config.ExcludedChannels.Select(x => x.Name))).WithIsInline(false))
               .WithColor(Color.DarkPurple);
             await command.RespondAsync(ephemeral: true, embed: eb.Build());
             return result;

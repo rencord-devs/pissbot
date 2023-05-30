@@ -16,7 +16,7 @@ namespace Rencord.PissBot.Droplets.Commands
         public Task Configure(SlashCommandBuilder builder)
         {
             builder.WithName(Name)
-                   .WithDescription("Enable <:letsgo:1020270999037554719> reacts to posts that say Gub-Gub") // NOTE: 100 chars max!
+                   .WithDescription("Enable reacts to posts that say Gub-Gub") // NOTE: 100 chars max!
                    .WithDefaultMemberPermissions(GuildPermission.ManageChannels)
                    .AddOption(EnableOption, ApplicationCommandOptionType.Boolean, "enable or disable the Gub-Gub reaccs", isRequired: true);
             return Task.CompletedTask;
