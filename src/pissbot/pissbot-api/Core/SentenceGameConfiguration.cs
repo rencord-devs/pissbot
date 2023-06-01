@@ -1,5 +1,4 @@
 ﻿using Microsoft.Azure.Cosmos.Linq;
-using Rencord.PissBot.Droplets.Commands;
 
 namespace Rencord.PissBot.Core
 {
@@ -24,12 +23,6 @@ namespace Rencord.PissBot.Core
     public class GubGubConfiguration
     {
         public bool EnableGubGub { get; set; } = true;
-    }
-
-    public class PrideRoleConfiguration
-    {
-        public bool EnablePrideRole { get; set; }
-        public RoleSummary? PrideRole { get; set; }
     }
 
     public class RenWatchConfiguration
