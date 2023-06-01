@@ -75,6 +75,7 @@ namespace Rencord.PissBot.Droplets
     public class PrideRole : IPissDroplet
     {
         private readonly IGuildDataPersistence guildDataStore;
+        private readonly ILogger<PrideRole> logger;
         private CancellationToken stopToken;
         private DiscordSocketClient? client;
         private List<SocketRole> roles = new List<SocketRole>();
@@ -90,9 +91,10 @@ namespace Rencord.PissBot.Droplets
         };
         private int color = 0;
 
-        public PrideRole(IGuildDataPersistence guildDataStore)
+        public PrideRole(IGuildDataPersistence guildDataStore, ILogger<PrideRole> logger)
         {
             this.guildDataStore = guildDataStore;
+            this.logger = logger;
         }
 
         public Task Start(DiscordSocketClient client, CancellationToken stopToken)
@@ -133,7 +135,7 @@ namespace Rencord.PissBot.Droplets
                 }
                 catch (Exception ex)
                 {
-
+                    logger.LogError(ex, "Exception in PrideRole.Run");
                 }
             }
         }
