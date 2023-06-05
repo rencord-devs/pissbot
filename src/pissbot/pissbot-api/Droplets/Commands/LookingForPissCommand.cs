@@ -24,7 +24,7 @@ namespace Rencord.PissBot.Droplets.Commands
         public Task Configure(SlashCommandBuilder builder)
         {
             builder.WithName(Name)
-                   .WithDescription("Enable/disable piss reacts and manage excluded channels (use 1 option at a time)") // NOTE: 100 chars max!
+                   .WithDescription("Enable/disable piss reacts and manage excluded channels - use 1 option at a time") // NOTE: 100 chars max!
                    .WithDefaultMemberPermissions(GuildPermission.ManageChannels)
                    .AddOption(EnableOption, ApplicationCommandOptionType.Boolean, "enable or disable the piss reaccs", isRequired: false)
                    .AddOption(ExcludeChannelOption, ApplicationCommandOptionType.Channel, "exclude a channel from reactions", isRequired: false)

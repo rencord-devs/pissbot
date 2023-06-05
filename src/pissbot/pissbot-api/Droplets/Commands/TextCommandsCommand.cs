@@ -18,7 +18,7 @@ namespace Rencord.PissBot.Droplets.Commands
         public Task Configure(SlashCommandBuilder builder)
         {
             builder.WithName(Name)
-                   .WithDescription("Exclude channels from member's text commands") // NOTE: 100 chars max!
+                   .WithDescription("Exclude channels from member's text commands.") // NOTE: 100 chars max!
                    .WithDefaultMemberPermissions(GuildPermission.ManageChannels)
                    .AddOption(EnableOption, ApplicationCommandOptionType.Boolean, "enable or disable all PissBot text commands", isRequired: false)
                    .AddOption(ExcludeChannelOption, ApplicationCommandOptionType.Channel, "exclude a channel from member's text commands", isRequired: false)

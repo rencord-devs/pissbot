@@ -72,6 +72,9 @@ namespace Rencord.PissBot.Droplets
 
                     await guild.CreateApplicationCommandAsync(guildCommand.Build());
                 }
+
+                var toRemove = existingCommands.FirstOrDefault(x => x.Name.ToLower() == "priderole" && x.ApplicationId == options.ApplicationId);
+                if (toRemove is not null) await toRemove.DeleteAsync();
             }
             client.SlashCommandExecuted += CommandExecuted;
             client.ModalSubmitted += ModalSubmitted;

@@ -17,7 +17,7 @@ namespace Rencord.PissBot.Droplets.Commands
         public Task Configure(SlashCommandBuilder builder)
         {
             builder.WithName(Name)
-                   .WithDescription("Add :middle_finger: reacts to posts by specified users, removing the react after N seconds")
+                   .WithDescription("Add :middle_finger: reacts to posts by specified users, removing the react after N seconds.")
                    .WithDefaultMemberPermissions(GuildPermission.ManageChannels)
                    .AddOption(EnableOption, ApplicationCommandOptionType.Boolean, "enable or disable the middle finger reaccs", isRequired: false)
                    .AddOption(TimeOption, ApplicationCommandOptionType.Integer, "the time in seconds to leave the reaction up - set to 0 leave it forever", isRequired: false)

@@ -20,7 +20,7 @@ namespace Rencord.PissBot.Droplets.Commands
         public Task Configure(SlashCommandBuilder builder)
         {
             builder.WithName(Name)
-                   .WithDescription("Enable reacts to posts containing a Ren song title and manage song titles (use 1 option at a time)") // NOTE: 100 chars max!
+                   .WithDescription("Enable reacts to posts containing a Ren song title and manage song titles - use 1 option at a time") // NOTE: 100 chars max!
                    .WithDefaultMemberPermissions(GuildPermission.ManageChannels)
                    .AddOption(EnableOption, ApplicationCommandOptionType.Boolean, "enable or disable the Ren song title reaccs", isRequired: false)
                    .AddOption(AddTermOption, ApplicationCommandOptionType.String, "add a watch term", isRequired: false)

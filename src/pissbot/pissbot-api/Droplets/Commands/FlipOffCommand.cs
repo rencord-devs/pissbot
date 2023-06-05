@@ -15,7 +15,7 @@ namespace Rencord.PissBot.Droplets.Commands
         public Task Configure(SlashCommandBuilder builder)
         {
             builder.WithName(Name)
-                   .WithDescription("Flip off a specified member")
+                   .WithDescription("Flip off a specified member.")
                    .WithDefaultMemberPermissions(GuildPermission.SendMessages)
                    .AddOption(TargetOption, ApplicationCommandOptionType.User, "the user to flip off", isRequired: true);
             return Task.CompletedTask;
