@@ -46,6 +46,7 @@ namespace Rencord.PissBot.Droplets
             var guild = await guildDataStore.GetData(stc.Guild.Id);
             var config = guild.GetOrAddData(() => new RenWatchConfiguration());
             if (!config.EnableRenWatch) return;
+            if (config.ExcludedChannels.Any(x => x.Id == stc.Id)) return;
 
             var content = arg.Content?.ToLower();
             if (content is not null && config.WatchTerms.Any(y => content.Contains(y)))

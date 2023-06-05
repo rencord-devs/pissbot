@@ -46,6 +46,7 @@ namespace Rencord.PissBot.Droplets
             var guild = await guildDataStore.GetData(stc.Guild.Id);
             var config = guild.GetOrAddData(() => new GubGubConfiguration());
             if (!config.EnableGubGub) return;
+            if (config.ExcludedChannels.Any(x => x.Id == stc.Id)) return;
 
             var content = arg.Content?.ToLower();
             if (content is not null && (content.Contains("gub-gub") || content.Contains("gub gub") || content.Contains("gubgub")))

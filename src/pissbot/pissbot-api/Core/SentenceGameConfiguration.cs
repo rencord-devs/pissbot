@@ -23,12 +23,18 @@ namespace Rencord.PissBot.Core
     public class GubGubConfiguration
     {
         public bool EnableGubGub { get; set; } = true;
+
+        private List<ChannelSummary> excludedChannels = new List<ChannelSummary>();
+        public List<ChannelSummary> ExcludedChannels { get => excludedChannels; set => excludedChannels = value ?? new List<ChannelSummary>(); }
     }
 
     public class RenWatchConfiguration
     {
         public bool EnableRenWatch { get; set; } = true;
         public List<string> WatchTerms { get; set; } = new List<string>();
+
+        private List<ChannelSummary> excludedChannels = new List<ChannelSummary>();
+        public List<ChannelSummary> ExcludedChannels { get => excludedChannels; set => excludedChannels = value ?? new List<ChannelSummary>(); }
     }
 
     public class ChannelSummary
@@ -41,9 +47,9 @@ namespace Rencord.PissBot.Core
     {
         private List<ChannelSummary> excludedChannels = new List<ChannelSummary>();
 
-        public bool EnableLookingForPiss { get; set; }
-
         public List<ChannelSummary> ExcludedChannels { get => excludedChannels; set => excludedChannels = value ?? new List<ChannelSummary>(); }
+
+        public bool EnableLookingForPiss { get; set; }
         public List<PissLeagueEntry> PissLeague { get; set; } = new List<PissLeagueEntry>();
 
         public void AddPiss(ulong id, int pissesToAdd, string mention)
@@ -68,6 +74,9 @@ namespace Rencord.PissBot.Core
         public bool EnableMiddleFinger { get; set; }
         public long Time { get; set; } = 5;
         public List<MiddleFingerUser> Users { get; set; } = new List<MiddleFingerUser>();
+
+        private List<ChannelSummary> excludedChannels = new List<ChannelSummary>();
+        public List<ChannelSummary> ExcludedChannels { get => excludedChannels; set => excludedChannels = value ?? new List<ChannelSummary>(); }
     }
 
     public class MiddleFingerUser
