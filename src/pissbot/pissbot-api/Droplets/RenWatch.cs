@@ -46,6 +46,7 @@ namespace Rencord.PissBot.Droplets
             var guild = await guildDataStore.GetData(stc.Guild.Id);
             var config = guild.GetOrAddData(() => new RenWatchConfiguration());
             if (!config.EnableRenWatch) return;
+            if (config.ExcludedChannels.Any(x => x.Id == stc.Id)) return;
 
             var content = arg.Content?.ToLower();
             if (content is not null && config.WatchTerms.Any(y => content.Contains(y)))
@@ -70,7 +71,7 @@ namespace Rencord.PissBot.Droplets
             {
                 try
                 {
-                    await arg.Channel.SendMessageAsync("> I love Ren\r\n\r\nAs do we all, my friend. As do we all.", messageReference: arg.Reference);
+                    await arg.Channel.SendMessageAsync("> I love Ren\r\n\r\nAs do we all, my friend. As do we all.", messageReference: new MessageReference(arg.Id));
                 }
                 catch (Exception ex2)
                 {

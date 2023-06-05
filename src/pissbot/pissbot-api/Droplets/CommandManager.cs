@@ -72,9 +72,43 @@ namespace Rencord.PissBot.Droplets
 
                     await guild.CreateApplicationCommandAsync(guildCommand.Build());
                 }
+
+                var toRemove = existingCommands.FirstOrDefault(x => x.Name.ToLower() == "priderole" && x.ApplicationId == options.ApplicationId);
+                if (toRemove is not null) await toRemove.DeleteAsync();
             }
             client.SlashCommandExecuted += CommandExecuted;
             client.ModalSubmitted += ModalSubmitted;
+            client.MessageReceived += MessageReceived;
+        }
+
+        private async Task MessageReceived(SocketMessage arg)
+        {
+            if (stopToken.IsCancellationRequested) return;
+            if (arg.Author.IsBot) return;
+            if (arg.Channel is not SocketTextChannel stc) return;
+            var msg = arg.Content?.ToLower();
+            if (msg is null || !commands.OfType<ITextCommand>().Any(x => msg.StartsWith(x.Command))) return;
+            var guild = await guildDataStore.GetData(stc.Guild.Id);
+            var config = guild.GetOrAddData(() => new TextCommandConfiguration());
+            if (!config.EnableTextCommands) return;
+            if (config.ExcludedChannels.Any(x => x.Id == stc.Id)) return;
+
+            var user = await userDataStore.GetData(arg.Author.Id);
+            foreach (var command in commands.OfType<ITextCommand>().Where(x => msg?.StartsWith(x.Command) == true)) 
+            {
+                try
+                {
+                    var modified = await command.Handle(arg, guild, user);
+                    Task t1 = Task.CompletedTask, t2 = Task.CompletedTask;
+                    if (modified.User == DataState.Modified) t1 = userDataStore.SaveData(user.Id);
+                    if (modified.Guild == DataState.Modified) t2 = guildDataStore.SaveData(guild.Id);
+                    await t1; await t2;
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "Error in text command handler");
+                }
+            }
         }
 
         private async Task ModalSubmitted(SocketModal modal)

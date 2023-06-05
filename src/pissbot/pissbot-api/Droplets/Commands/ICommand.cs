@@ -12,6 +12,18 @@ namespace Rencord.PissBot.Droplets.Commands
     }
 
     /// <summary>
+    /// Represents a command that has a text version users can use
+    /// </summary>
+    public interface ITextCommand : ICommand
+    {
+        /// <summary>
+        /// The command string
+        /// </summary>
+        string Command { get; }
+        Task<(DataState Guild, DataState User)> Handle(SocketMessage message, GuildData guildData, UserData userData);
+    }
+
+    /// <summary>
     /// Represents a command that uses modals to interact with the user
     /// </summary>
     public interface IModalCommand : ICommand
