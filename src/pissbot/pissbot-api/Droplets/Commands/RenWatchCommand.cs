@@ -99,18 +99,22 @@ namespace Rencord.PissBot.Droplets.Commands
             var eb = new EmbedBuilder();
             var fullList = string.Join(", ", config.WatchTerms);
             var list = fullList;
-            if (fullList.Length > 1000)
+            if (fullList.Length > 800)
             {
-                list = new string(fullList.Take(1000).ToArray());
+                list = new string(fullList.Take(800).ToArray());
                 list += "...";
             }
             if (string.IsNullOrWhiteSpace(list))
                 list = "[no watch terms]";
+            var val = string.Join(", ", config.ExcludedChannels.Where(x => x.Name is not null).Select(x => x.Name));
+            if (string.IsNullOrWhiteSpace(val))
+                val = "[no exlcudes]";
             eb.WithTitle("RenWatch configuration")
               .WithDescription($"The current configuration of PissBot RenWatch on {guildData.Name}")
               .WithFields(
                 new EmbedFieldBuilder().WithName("enabled").WithValue(config.EnableRenWatch).WithIsInline(true),
-                new EmbedFieldBuilder().WithName("terms").WithValue(list).WithIsInline(false))
+                new EmbedFieldBuilder().WithName("terms").WithValue(list).WithIsInline(false),
+                new EmbedFieldBuilder().WithName("excluded").WithValue(val).WithIsInline(false))
               .WithColor(Color.DarkPurple);
             await command.RespondAsync(ephemeral: true, embed: eb.Build());
             return result;

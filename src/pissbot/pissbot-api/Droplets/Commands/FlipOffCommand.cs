@@ -4,9 +4,12 @@ using Rencord.PissBot.Core;
 
 namespace Rencord.PissBot.Droplets.Commands
 {
-    public class FlipOffCommand : ICommand
+    public class FlipOffCommand : ITextCommand
     {
         public string Name => "flipoff";
+
+        public string Command => "-flipoff";
+
         public const string TargetOption = "target";
 
         public Task Configure(SlashCommandBuilder builder)
@@ -44,5 +47,19 @@ namespace Rencord.PissBot.Droplets.Commands
 
         private string RandomFlipOff() =>
             flipoffs[rnd.Next(0, flipoffs.Length)];
+
+        public async Task<(DataState Guild, DataState User)> Handle(SocketMessage message, GuildData guildData, UserData userData)
+        {
+            
+            if (message.MentionedUsers?.FirstOrDefault() is IUser user)
+            {
+                var eb = new EmbedBuilder();
+                eb.WithTitle($"Flip off!")
+                  .WithDescription($"{message.Author.Mention} flipped off {user.Mention}!\r\n\r\n> **{RandomFlipOff()}**")
+                  .WithColor(Color.DarkPurple);
+                await message.Channel.SendMessageAsync(embed: eb.Build(), allowedMentions: AllowedMentions.All);
+            }
+            return (DataState.Pristine, DataState.Pristine);
+        }
     }
 }

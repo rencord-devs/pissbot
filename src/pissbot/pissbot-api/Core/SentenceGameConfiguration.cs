@@ -28,6 +28,14 @@ namespace Rencord.PissBot.Core
         public List<ChannelSummary> ExcludedChannels { get => excludedChannels; set => excludedChannels = value ?? new List<ChannelSummary>(); }
     }
 
+    public class TextCommandConfiguration
+    {
+        public bool EnableTextCommands { get; set; } = true;
+
+        private List<ChannelSummary> excludedChannels = new List<ChannelSummary>();
+        public List<ChannelSummary> ExcludedChannels { get => excludedChannels; set => excludedChannels = value ?? new List<ChannelSummary>(); }
+    }
+
     public class RenWatchConfiguration
     {
         public bool EnableRenWatch { get; set; } = true;

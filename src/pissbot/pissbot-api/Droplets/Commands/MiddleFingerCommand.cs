@@ -100,12 +100,16 @@ namespace Rencord.PissBot.Droplets.Commands
                                                                       GuildData guildData)
         {
             var eb = new EmbedBuilder();
+            var val = string.Join(", ", config.ExcludedChannels.Where(x => x.Name is not null).Select(x => x.Name));
+            if (string.IsNullOrWhiteSpace(val))
+                val = "[no exlcudes]";
             eb.WithTitle("Middle Finger configuration")
               .WithDescription($"The current configuration of middle finger on {guildData.Name}")
               .WithFields(
                 new EmbedFieldBuilder().WithName("enabled").WithValue(config.EnableMiddleFinger).WithIsInline(true),
                 new EmbedFieldBuilder().WithName("time in seconds to show reaction (0 = don't remove)").WithValue(config.Time).WithIsInline(true),
-                new EmbedFieldBuilder().WithName("users to react to").WithValue(MentionString(config)).WithIsInline(false))
+                new EmbedFieldBuilder().WithName("users to react to").WithValue(MentionString(config)).WithIsInline(false),
+                new EmbedFieldBuilder().WithName("excluded").WithValue(val).WithIsInline(false))
               .WithColor(Color.DarkPurple);
             await command.RespondAsync(ephemeral: true, embed: eb.Build());
             return result;
