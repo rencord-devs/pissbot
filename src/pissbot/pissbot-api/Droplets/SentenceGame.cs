@@ -116,7 +116,7 @@ namespace Rencord.PissBot.Droplets
             if (gameData.PreviousAuthor == arg.Author.Id)
             {
                 await ReactNo(arg);
-                await gameChannel.SendMessageAsync(messageReference: arg.Reference, text: RandomNegativeResponse());
+                await gameChannel.SendMessageAsync(messageReference: new MessageReference(arg.Id), text: RandomNegativeResponse());
                 return;
             }
 

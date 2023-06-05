@@ -71,7 +71,7 @@ namespace Rencord.PissBot.Droplets
             {
                 try
                 {
-                    await arg.Channel.SendMessageAsync("> I love Ren\r\n\r\nAs do we all, my friend. As do we all.", messageReference: arg.Reference);
+                    await arg.Channel.SendMessageAsync("> I love Ren\r\n\r\nAs do we all, my friend. As do we all.", messageReference: new MessageReference(arg.Id));
                 }
                 catch (Exception ex2)
                 {
