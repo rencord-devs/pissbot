@@ -51,6 +51,9 @@ namespace Rencord.PissBot.Core
         public string? Name { get; set; }
     }
 
+    [Obsolete("Retained for deserialization compat")]
+    public class PrideRoleConfiguration { }
+
     public class LookingForPissConfiguration
     {
         private List<ChannelSummary> excludedChannels = new List<ChannelSummary>();

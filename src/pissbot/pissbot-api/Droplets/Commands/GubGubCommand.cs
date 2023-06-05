@@ -70,10 +70,14 @@ namespace Rencord.PissBot.Droplets.Commands
                                                                       GuildData guildData)
         {
             var eb = new EmbedBuilder();
+            var val = string.Join(", ", config.ExcludedChannels.Where(x => x.Name is not null).Select(x => x.Name));
+            if (string.IsNullOrWhiteSpace(val))
+                val = "[no exlcudes]";
             eb.WithTitle("Gub-Gub configuration")
               .WithDescription($"The current configuration of PissBot Gub-Gub on {guildData.Name}")
               .WithFields(
-                new EmbedFieldBuilder().WithName("enabled").WithValue(config.EnableGubGub).WithIsInline(true))
+                new EmbedFieldBuilder().WithName("enabled").WithValue(config.EnableGubGub).WithIsInline(true),
+                new EmbedFieldBuilder().WithName("excluded").WithValue(val).WithIsInline(false))
               .WithColor(Color.DarkPurple);
             await command.RespondAsync(ephemeral: true, embed: eb.Build());
             return result;
