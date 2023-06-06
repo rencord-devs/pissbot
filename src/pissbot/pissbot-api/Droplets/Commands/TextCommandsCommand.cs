@@ -83,4 +83,46 @@ namespace Rencord.PissBot.Droplets.Commands
             return result;
         }
     }
+
+    public class SpeakCommand : ICommand
+    {
+        public string Name => "speak";
+        public const string MessageOption = "message";
+        public const string ReplyToOption = "replyto";
+
+        public SpeakCommand()
+        {
+        }
+
+        public Task Configure(SlashCommandBuilder builder)
+        {
+            builder.WithName(Name)
+                   .WithDescription("Send a message as PissBot to the current channel.") // NOTE: 100 chars max!
+                   .WithDefaultMemberPermissions(GuildPermission.ManageChannels)
+                   .AddOption(MessageOption, ApplicationCommandOptionType.String, "the text to say", isRequired: true)
+                   .AddOption(ReplyToOption, ApplicationCommandOptionType.String, "the message id to reply to", isRequired: false);
+            return Task.CompletedTask;
+        }
+
+        public async Task<(DataState Guild, DataState User)> Handle(SocketSlashCommand command, GuildData guildData, UserData userData)
+        {
+            var msgOpt = command.Data.Options.FirstOrDefault(x => x.Name == MessageOption);
+            if (msgOpt?.Value is string value)
+            {
+                await command.RespondAsync("ok", ephemeral: true);
+                value = value.Replace(@"\r\n", Environment.NewLine);
+                var replyToOpt = command.Data.Options.FirstOrDefault(x => x.Name == ReplyToOption);
+                if (replyToOpt?.Value is string val2 && ulong.TryParse(val2, out var val3))
+                {
+                    await command.Channel.SendMessageAsync(text: value, messageReference: new MessageReference(val3));
+                }
+                else
+                {
+                    await command.Channel.SendMessageAsync(text: value);
+                }
+            }
+            await command.RespondAsync("no message", ephemeral: true);
+            return (DataState.Pristine, DataState.Pristine);
+        }
+    }
 }
