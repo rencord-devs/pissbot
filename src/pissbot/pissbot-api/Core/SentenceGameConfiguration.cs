@@ -45,6 +45,11 @@ namespace Rencord.PissBot.Core
         public List<ChannelSummary> ExcludedChannels { get => excludedChannels; set => excludedChannels = value ?? new List<ChannelSummary>(); }
     }
 
+    public class SpeakConfiguration
+    {
+        public ChannelSummary? Audit { get; set; }
+    }
+
     public class ChannelSummary
     {
         public ulong Id { get; set; }
