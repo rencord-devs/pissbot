@@ -1,4 +1,5 @@
 ﻿using Discord;
+using Discord.Rest;
 using Discord.WebSocket;
 using Rencord.PissBot.Core;
 
@@ -89,6 +90,7 @@ namespace Rencord.PissBot.Droplets.Commands
         public string Name => "speak";
         public const string MessageOption = "message";
         public const string ReplyToOption = "replyto";
+        public const string AuditOption = "audit";
 
         public SpeakCommand()
         {
@@ -97,32 +99,58 @@ namespace Rencord.PissBot.Droplets.Commands
         public Task Configure(SlashCommandBuilder builder)
         {
             builder.WithName(Name)
-                   .WithDescription("Send a message as PissBot to the current channel.") // NOTE: 100 chars max!
+                   .WithDescription("Send a message as PissBot, to the current channel") // NOTE: 100 chars max!
                    .WithDefaultMemberPermissions(GuildPermission.ManageChannels)
-                   .AddOption(MessageOption, ApplicationCommandOptionType.String, "the text to say", isRequired: true)
-                   .AddOption(ReplyToOption, ApplicationCommandOptionType.String, "the message id to reply to", isRequired: false);
+                   .AddOption(MessageOption, ApplicationCommandOptionType.String, "the text to say", isRequired: false)
+                   .AddOption(ReplyToOption, ApplicationCommandOptionType.String, "the message id to reply to", isRequired: false)
+                   .AddOption(AuditOption, ApplicationCommandOptionType.Channel, "set the channel to write the audit log to", isRequired: false);
             return Task.CompletedTask;
         }
 
         public async Task<(DataState Guild, DataState User)> Handle(SocketSlashCommand command, GuildData guildData, UserData userData)
         {
+            var opts = guildData.GetOrAddData(() => new SpeakConfiguration());
+            var auditOpt = command.Data.Options.FirstOrDefault(x => x.Name == AuditOption);
+            if (auditOpt?.Value is IChannel chan)
+            {
+                opts.Audit = new ChannelSummary { Id = chan.Id, Name = chan.Name };
+                await command.RespondAsync("audit channel set", ephemeral: true);
+                return (DataState.Modified, DataState.Pristine);
+            }
+
             var msgOpt = command.Data.Options.FirstOrDefault(x => x.Name == MessageOption);
             if (msgOpt?.Value is string value)
             {
                 await command.RespondAsync("ok", ephemeral: true);
                 value = value.Replace(@"\r\n", Environment.NewLine);
                 var replyToOpt = command.Data.Options.FirstOrDefault(x => x.Name == ReplyToOption);
+                RestUserMessage? rum;
                 if (replyToOpt?.Value is string val2 && ulong.TryParse(val2, out var val3))
                 {
-                    await command.Channel.SendMessageAsync(text: value, messageReference: new MessageReference(val3));
+                    rum = await command.Channel.SendMessageAsync(text: value, messageReference: new MessageReference(val3));
                 }
                 else
                 {
-                    await command.Channel.SendMessageAsync(text: value);
+                    rum = await command.Channel.SendMessageAsync(text: value);
                 }
+                if (rum is not null) 
+                    await Audit(command, opts, value, rum);
             }
             await command.RespondAsync("no message", ephemeral: true);
             return (DataState.Pristine, DataState.Pristine);
+        }
+
+        private static async Task Audit(SocketSlashCommand command, SpeakConfiguration opts, string value, RestUserMessage msg)
+        {
+            if (opts.Audit is not null && command.Channel is SocketGuildChannel sgc)
+            {
+                if (sgc.Guild.GetChannel(opts.Audit.Id) is ISocketMessageChannel smc)
+                {
+                    await smc.SendMessageAsync(
+                        text: $"User {command.User.Mention} used PissBot /speak to create message {msg.GetJumpUrl()}.\r\n> Message content: `{value}`",
+                        allowedMentions: AllowedMentions.None, flags: MessageFlags.SuppressEmbeds);
+                }
+            }
         }
     }
 }
