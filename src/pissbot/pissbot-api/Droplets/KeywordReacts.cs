@@ -68,7 +68,18 @@ namespace Rencord.PissBot.Droplets
                 {
                     try
                     {
-                        await arg.AddReactionAsync(Emote.Parse(term.Value));
+                        if (Emoji.TryParse(term.Value, out var em))
+                        {
+                            await arg.AddReactionAsync(em);
+                        }
+                        else if (Emote.TryParse(term.Value, out var emo))
+                        {
+                            await arg.AddReactionAsync(emo);
+                        }
+                        else
+                        {
+                            logger.LogWarning("Broken emoji {0} for term {1}", term.Value, term.Key);
+                        }
                     }
                     catch (Exception ex)
                     {

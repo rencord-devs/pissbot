@@ -110,7 +110,7 @@ namespace Rencord.PissBot.Droplets.Commands
             {
                 var term = addTermOpt.Options.First(x => x.Name == AddTermTermOption);
                 var emoji = addTermOpt.Options.First(x => x.Name == AddTermEmojiOption);
-                config.WatchTerms[(string)term.Value] = (string)emoji.Value;
+                config.WatchTerms[((string)term.Value).ToLower()] = ((string)emoji.Value).ToLower();
                 modified = DataState.Modified;
             }
 
@@ -118,9 +118,9 @@ namespace Rencord.PissBot.Droplets.Commands
             if (removeTermOpt is not null)
             {
                 var term = removeTermOpt.Options.First(x => x.Name == RemoveTermTermOption);
-                if (config.WatchTerms.ContainsKey((string)term.Value))
+                if (config.WatchTerms.ContainsKey(((string)term.Value).ToLower()))
                 {
-                    config.WatchTerms.Remove((string)term.Value);
+                    config.WatchTerms.Remove(((string)term.Value).ToLower());
                     modified = DataState.Modified;
                 }
             }
