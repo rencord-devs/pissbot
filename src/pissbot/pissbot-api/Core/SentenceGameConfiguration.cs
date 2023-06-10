@@ -20,6 +20,16 @@ namespace Rencord.PissBot.Core
         public bool EnableSentenceGame { get; set; }
     }
 
+    public class KeywordReactsConfiguration
+    {
+        public bool EnableKeywordReacts { get; set; } = true;
+        public Dictionary<string, string> WatchTerms { get; set; } = new Dictionary<string, string>();
+
+        private List<ChannelSummary> excludedChannels = new List<ChannelSummary>();
+        public List<ChannelSummary> ExcludedChannels { get => excludedChannels; set => excludedChannels = value ?? new List<ChannelSummary>(); }
+    }
+
+    [Obsolete("use KeywordReacts")]
     public class GubGubConfiguration
     {
         public bool EnableGubGub { get; set; } = true;

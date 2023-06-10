@@ -78,6 +78,17 @@ namespace Rencord.PissBot.Core
             Data.Add(data);
         }
 
+        /// <returns>the item if it existed</returns>
+        public T? RemoveData<T>() where T : class
+        {
+            var existing = GetData<T>();
+            if (existing != null)
+            {
+                Data.Remove(existing);
+            }
+            return existing;
+        }
+
         private T Add<T>(T t) where T : class
         {
             Data.Add(t);

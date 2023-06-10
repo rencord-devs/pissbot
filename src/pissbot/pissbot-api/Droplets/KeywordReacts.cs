@@ -5,13 +5,13 @@ using Rencord.PissBot.Persistence;
 
 namespace Rencord.PissBot.Droplets
 {
-    public class GubGub : IPissDroplet
+    public class KeywordReacts : IPissDroplet
     {
         private readonly IGuildDataPersistence guildDataStore;
         private CancellationToken stopToken;
         private DiscordSocketClient? client;
 
-        public GubGub(IGuildDataPersistence guildDataStore)
+        public KeywordReacts(IGuildDataPersistence guildDataStore)
         {
             this.guildDataStore = guildDataStore;
         }
@@ -44,26 +44,32 @@ namespace Rencord.PissBot.Droplets
             if (arg.Author.IsBot) return;
             if (arg.Channel is not SocketTextChannel stc) return;
             var guild = await guildDataStore.GetData(stc.Guild.Id);
-            var config = guild.GetOrAddData(() => new GubGubConfiguration());
-            if (!config.EnableGubGub) return;
+            var config = guild.GetOrAddData(() => new KeywordReactsConfiguration());
+            if (!config.EnableKeywordReacts) return;
             if (config.ExcludedChannels.Any(x => x.Id == stc.Id)) return;
 
-            var content = arg.Content?.ToLower();
-            if (content is not null && (content.Contains("gub-gub") || content.Contains("gub gub") || content.Contains("gubgub")))
+            #pragma warning disable CS0618 // Type or member is obsolete - this code removes the obsolete data from the store
+            var oldConfig = guild.RemoveData<GubGubConfiguration>();
+            if (oldConfig is not null)
             {
-                try
-                {
-                    await arg.AddReactionAsync(Emote.Parse("<:letsgo:1020270999037554719>"));
-                }
-                catch (Exception ex)
+                // migrate existing thing
+                config.WatchTerms["gub-gub"] = "<:letsgo:1020270999037554719>";
+                config.WatchTerms["gub gub"] = "<:letsgo:1020270999037554719>";
+                config.WatchTerms["gubgub"] = "<:letsgo:1020270999037554719>";
+            }
+            #pragma warning restore CS0618 // Type or member is obsolete
+
+            var content = arg.Content?.ToLower();
+            if (content is not null)
+            {
+                foreach (var term in config.WatchTerms.Where(x => content.Contains(x.Key)))
                 {
                     try
                     {
-                        await arg.AddReactionAsync(Emoji.Parse("😯"));
+                        await arg.AddReactionAsync(Emote.Parse(term.Value));
                     }
-                    catch (Exception ex2)
+                    catch (Exception ex)
                     {
-
                     }
                 }
             }
