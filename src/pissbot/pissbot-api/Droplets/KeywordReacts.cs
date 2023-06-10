@@ -8,12 +8,14 @@ namespace Rencord.PissBot.Droplets
     public class KeywordReacts : IPissDroplet
     {
         private readonly IGuildDataPersistence guildDataStore;
+        private readonly ILogger<KeywordReacts> logger;
         private CancellationToken stopToken;
         private DiscordSocketClient? client;
 
-        public KeywordReacts(IGuildDataPersistence guildDataStore)
+        public KeywordReacts(IGuildDataPersistence guildDataStore, ILogger<KeywordReacts> logger)
         {
             this.guildDataStore = guildDataStore;
+            this.logger = logger;
         }
 
         public Task Start(DiscordSocketClient client, CancellationToken stopToken)
@@ -70,6 +72,7 @@ namespace Rencord.PissBot.Droplets
                     }
                     catch (Exception ex)
                     {
+                        logger.LogError(ex, "error in KeywordReacts");
                     }
                 }
             }
