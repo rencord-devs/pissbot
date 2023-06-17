@@ -1,4 +1,6 @@
-﻿using Microsoft.Azure.Cosmos.Linq;
+﻿using Discord;
+using Microsoft.Azure.Cosmos.Linq;
+using Newtonsoft.Json;
 
 namespace Rencord.PissBot.Core
 {
@@ -103,6 +105,31 @@ namespace Rencord.PissBot.Core
 
         private List<ChannelSummary> excludedChannels = new List<ChannelSummary>();
         public List<ChannelSummary> ExcludedChannels { get => excludedChannels; set => excludedChannels = value ?? new List<ChannelSummary>(); }
+    }
+
+    public class StickyNoteConfiguration
+    {
+        public List<StickyNoteData> Notes { get; set; } = new List<StickyNoteData>();
+    }
+
+    public class StickyNoteData
+    {
+        public ChannelSummary? Channel { get; set; }
+        public string? NoteTitle { get; set; }
+        public string? NoteText { get; set; }
+        public string? NoteFooter { get; set; }
+        public string? NoteAuthorName { get; set; }
+        public string? NoteThumbnailUrl { get; set; }
+        public string? NoteImageUrl { get; set; }
+        public ulong? LastMessageId { get; set; }
+        public override int GetHashCode()
+        {
+            return Channel?.Id.GetHashCode() ?? 0;
+        }
+        public override bool Equals(object? obj)
+        {
+            return obj is StickyNoteData snd && snd.Channel?.Id == this.Channel?.Id;
+        }
     }
 
     public class MiddleFingerUser

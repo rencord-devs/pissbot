@@ -2,9 +2,16 @@
 using Discord.WebSocket;
 using Rencord.PissBot.Core;
 using Rencord.PissBot.Persistence;
+using System.Collections.Concurrent;
+using System;
+using System.Runtime.CompilerServices;
+using Microsoft.Extensions.Logging;
+using System.Collections;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Rencord.PissBot.Droplets
 {
+
     public class MiddleFinger : IPissDroplet
     {
         private readonly IGuildDataPersistence guildDataStore;
