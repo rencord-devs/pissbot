@@ -121,10 +121,15 @@ namespace Rencord.PissBot.Core
         public string? NoteAuthorName { get; set; }
         public string? NoteThumbnailUrl { get; set; }
         public string? NoteImageUrl { get; set; }
-        public DateTimeOffset? LastPosted { get; set; }
-        [JsonIgnore]
-        public bool Waiting { get; set; }
         public ulong? LastMessageId { get; set; }
+        public override int GetHashCode()
+        {
+            return Channel?.Id.GetHashCode() ?? 0;
+        }
+        public override bool Equals(object? obj)
+        {
+            return obj is StickyNoteData snd && snd.Channel?.Id == this.Channel?.Id;
+        }
     }
 
     public class MiddleFingerUser
