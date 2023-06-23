@@ -5,9 +5,10 @@ using System;
 
 namespace Rencord.PissBot.Droplets.Commands
 {
-    public class KeywordReactsCommand : ICommand
+    public class KeywordReactsCommand : IBotUserAwareCommand, IMessageCommand
     {
         public string Name => "keywordreacts";
+
         public const string EnableOption = "enable";
         public const string ConfigureOption = "configure";
         public const string ExcludeChannelOption = "excludechannel";
@@ -17,15 +18,24 @@ namespace Rencord.PissBot.Droplets.Commands
         public const string AddTermTermOption = "addtermterm";
         public const string AddTermEmojiOption = "addtermemoji";
         public const string RemoveTermTermOption = "removetermterm";
+        public const string RemoveReactOption = "removereact";
+        public const string RemoveReactMessageIdOption = "removereactmessageid";
+        public const string RemoveReactReactOption = "removereactreact";
+        private const string RemoveAllPissbotReacts = "remove all pissbot reacts";
+        private readonly ILogger<KeywordReactsCommand> logger;
 
-        public KeywordReactsCommand()
+        public KeywordReactsCommand(ILogger<KeywordReactsCommand> logger)
         {
+            this.logger = logger;
         }
+
+        public IUser BotUser { get; set; }
+        public IEnumerable<string> MessageCommands { get; set; } = new List<string> { RemoveAllPissbotReacts };
 
         public Task Configure(SlashCommandBuilder builder)
         {
             builder.WithName(Name)
-                   .WithDescription("Enable reacts to posts with keywords.") // NOTE: 100 chars max!
+                   .WithDescription("Enable reacts to posts with keywords!") // NOTE: 100 chars max!
                    .WithDefaultMemberPermissions(GuildPermission.ManageChannels)
                    .AddOption(new SlashCommandOptionBuilder()
                         .WithName(ConfigureOption)
@@ -50,11 +60,19 @@ namespace Rencord.PissBot.Droplets.Commands
                         .WithDescription("remove a term")
                         .WithRequired(false)
                         .AddOption(RemoveTermTermOption, ApplicationCommandOptionType.String, "the term", isRequired: true)
+                   )
+                   .AddOption(new SlashCommandOptionBuilder()
+                        .WithName(RemoveReactOption)
+                        .WithType(ApplicationCommandOptionType.SubCommand)
+                        .WithDescription("remove a react from a post")
+                        .WithRequired(false)
+                        .AddOption(RemoveReactMessageIdOption, ApplicationCommandOptionType.String, "the message to remove the react(s) from", isRequired: true)
+                        .AddOption(RemoveReactReactOption, ApplicationCommandOptionType.String, "the specific react to remove", isRequired: false)
                    );
             return Task.CompletedTask;
         }
 
-        public Task<(DataState Guild, DataState User)> Handle(SocketSlashCommand command, GuildData guildData, UserData userData)
+        public async Task<(DataState Guild, DataState User)> Handle(SocketSlashCommand command, GuildData guildData, UserData userData)
         {
             var config = guildData.GetOrAddData(() => new KeywordReactsConfiguration());
             var modified = DataState.Pristine;
@@ -71,7 +89,7 @@ namespace Rencord.PissBot.Droplets.Commands
             }
             #pragma warning restore CS0618 // Type or member is obsolete
 
-            if (command.Data?.Options is null) return Respond((modified, DataState.Pristine), config, command, guildData);
+            if (command.Data?.Options is null) return await Respond((modified, DataState.Pristine), config, command, guildData);
 
             var configureOpt = command.Data.Options.FirstOrDefault(x => x.Name == ConfigureOption);
             if (configureOpt is not null)
@@ -125,12 +143,55 @@ namespace Rencord.PissBot.Droplets.Commands
                 }
             }
 
-            return Respond((modified, DataState.Pristine), config, command, guildData);
+            var removeReactOpt = command.Data.Options.FirstOrDefault(x => x.Name == RemoveReactOption);
+            if (removeReactOpt is not null)
+            {
+                var msgIdOpt = removeReactOpt.Options.First(x => x.Name == RemoveReactMessageIdOption);
+                var reactOpt = removeReactOpt.Options.FirstOrDefault(x => x.Name == RemoveReactReactOption);
+
+                if (msgIdOpt.Value is not string msgIdStr || !ulong.TryParse(msgIdStr, out var msgId))
+                {
+                    return await Respond((modified, DataState.Pristine), config, command, guildData);
+                }
+
+                try
+                {
+                    var m = await command.Channel.GetMessageAsync(msgId);
+                    if (reactOpt?.Value is not string react)
+                    {
+                        // remove all
+                        foreach (var r in m.Reactions.Where(x => x.Value.IsMe))
+                        {
+                            await m.RemoveReactionAsync(r.Key, BotUser);
+                        }
+                        return await Respond((modified, DataState.Pristine), config, command, guildData);
+                    }
+
+                    if (Emoji.TryParse(react, out var em))
+                    {
+                        await m.RemoveReactionAsync(em, BotUser);
+                    }
+                    else if (Emote.TryParse(react, out var emo))
+                    {
+                        await m.RemoveReactionAsync(emo, BotUser);
+                    }
+                    else
+                    {
+                        logger.LogWarning("failed to remove {0} on msg {1}", react, msgId);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "error in KeywordReacts");
+                }
+            }
+
+            return await Respond((modified, DataState.Pristine), config, command, guildData);
         }
 
         private async Task<(DataState Guild, DataState User)> Respond((DataState modified, DataState Pristine) result,
                                                                       KeywordReactsConfiguration config,
-                                                                      SocketSlashCommand command,
+                                                                      SocketCommandBase command,
                                                                       GuildData guildData)
         {
             var eb = new EmbedBuilder();
@@ -149,6 +210,30 @@ namespace Rencord.PissBot.Droplets.Commands
               .WithColor(Color.DarkPurple);
             await command.RespondAsync(ephemeral: true, embed: eb.Build());
             return result;
+        }
+
+        public async Task<(DataState Guild, DataState User)> Handle(SocketMessageCommand command, GuildData guildData, UserData userData)
+        {
+            var config = guildData.GetOrAddData(() => new KeywordReactsConfiguration());
+            var modified = DataState.Pristine;
+            if (command.CommandName == RemoveAllPissbotReacts)
+            {
+                try
+                {
+                    var m = await command.Channel.GetMessageAsync(command.Data.Message.Id);
+                    // remove all
+                    foreach (var r in m.Reactions.Where(x => x.Value.IsMe))
+                    {
+                        await m.RemoveReactionAsync(r.Key, BotUser);
+                    }
+                    return await Respond((modified, DataState.Pristine), config, command, guildData);
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "error in KeywordReacts");
+                }
+            }
+            return await Respond((modified, DataState.Pristine), config, command, guildData);
         }
     }
 }

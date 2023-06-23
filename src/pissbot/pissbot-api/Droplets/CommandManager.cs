@@ -5,6 +5,8 @@ using Microsoft.Extensions.Options;
 using Rencord.PissBot.Core;
 using Rencord.PissBot.Droplets.Commands;
 using Rencord.PissBot.Persistence;
+using System;
+using System.Runtime.InteropServices;
 
 namespace Rencord.PissBot.Droplets
 {
@@ -55,30 +57,86 @@ namespace Rencord.PissBot.Droplets
             foreach (var guild in client.Guilds)
             {
                 var existingCommands = await guild.GetApplicationCommandsAsync();
-                foreach (var command in commands)
-                {
-                    if (stopToken.IsCancellationRequested) return;
-                    var guildCommand = new SlashCommandBuilder();
-                    await command.Configure(guildCommand);
-                    var existingCommand = existingCommands.FirstOrDefault(x => x.Name == command.Name && x.ApplicationId == options.ApplicationId);
-                    if (existingCommand is not null)
-                    {
-                        // command authors can change a minor detail in the description to force a command rebuild on release (e.g. remove/add period)
-                        if (guildCommand.Description == existingCommand.Description)
-                            continue;
-                        else
-                            await existingCommand.DeleteAsync();
-                    }
-
-                    await guild.CreateApplicationCommandAsync(guildCommand.Build());
-                }
-
-                var toRemove = existingCommands.FirstOrDefault(x => x.Name.ToLower() == "priderole" && x.ApplicationId == options.ApplicationId);
-                if (toRemove is not null) await toRemove.DeleteAsync();
+                await SyncSlashCommands(guild, existingCommands);
+                await SyncMessageCommands(guild, existingCommands);
             }
             client.SlashCommandExecuted += CommandExecuted;
             client.ModalSubmitted += ModalSubmitted;
             client.MessageReceived += MessageReceived;
+            client.MessageCommandExecuted += MessageCommandExecuted;
+        }
+
+        private async Task SyncSlashCommands(SocketGuild guild, IReadOnlyCollection<SocketApplicationCommand> existingCommands)
+        {
+            foreach (var command in commands)
+            {
+                if (stopToken.IsCancellationRequested) return;
+                var guildCommand = new SlashCommandBuilder();
+                await command.Configure(guildCommand);
+                var existingCommand = existingCommands.FirstOrDefault(x => x.Name == command.Name && x.ApplicationId == options.ApplicationId);
+                if (existingCommand is not null)
+                {
+                    // command authors can change a minor detail in the description to force a command rebuild on release (e.g. remove/add period)
+                    if (guildCommand.Description == existingCommand.Description)
+                        continue;
+                    else
+                        await existingCommand.DeleteAsync();
+                }
+
+                await guild.CreateApplicationCommandAsync(guildCommand.Build());
+            }
+        }
+
+        private async Task SyncMessageCommands(SocketGuild guild, IReadOnlyCollection<SocketApplicationCommand> existingCommands)
+        {
+            foreach (var command in commands.OfType<IMessageCommand>())
+            {
+                if (stopToken.IsCancellationRequested) return;
+
+                foreach (var cmdName in command.MessageCommands)
+                {
+                    var guildCommand = new MessageCommandBuilder();
+                    guildCommand.WithDefaultMemberPermissions(GuildPermission.ManageMessages);
+                    guildCommand.WithName(cmdName);
+                    var existingCommand = existingCommands.FirstOrDefault(x => x.Name == cmdName && x.ApplicationId == options.ApplicationId);
+                    if (existingCommand is null)
+                    {
+                        await guild.CreateApplicationCommandAsync(guildCommand.Build());
+                    }
+
+                }
+            }
+        }
+
+        private async Task MessageCommandExecuted(SocketMessageCommand arg)
+        {
+            if (stopToken.IsCancellationRequested) return;
+            if (!arg.GuildId.HasValue) return;
+            var handler = commands.OfType<IMessageCommand>().FirstOrDefault(x => x.MessageCommands.Contains(arg.CommandName));
+            if (handler is null) return;
+
+            if (handler is IBotUserAwareCommand buac)
+            {
+                buac.BotUser = client!.CurrentUser;
+            }
+
+            var t1 = guildDataStore.GetData(arg.GuildId.Value);
+            var t2 = userDataStore.GetData(arg.User.Id);
+            await t1; await t2;
+
+            try
+            {
+                var modified = await handler.Handle(arg, t1.Result, t2.Result);
+
+                Task t3 = Task.CompletedTask, t4 = Task.CompletedTask;
+                if (modified.User == DataState.Modified) t3 = userDataStore.SaveData(arg.User.Id);
+                if (modified.Guild == DataState.Modified) t4 = guildDataStore.SaveData(arg.GuildId.Value);
+                await t3; await t4;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error in message command handler");
+            }
         }
 
         private async Task MessageReceived(SocketMessage arg)
@@ -146,6 +204,11 @@ namespace Rencord.PissBot.Droplets
             if (!arg.GuildId.HasValue) return;
             var handler = commands.FirstOrDefault(x => x.Name == arg.CommandName);
             if (handler is null) return;
+
+            if (handler is IBotUserAwareCommand buac)
+            {
+                buac.BotUser = client!.CurrentUser;
+            }
 
             var t1 = guildDataStore.GetData(arg.GuildId.Value);
             var t2 = userDataStore.GetData(arg.User.Id);
