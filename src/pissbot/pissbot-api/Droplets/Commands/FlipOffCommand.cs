@@ -25,13 +25,21 @@ namespace Rencord.PissBot.Droplets.Commands
         {
             if (command?.Data?.Options?.FirstOrDefault(x => x.Name == TargetOption)?.Value is IUser user)
             {
-                var eb = new EmbedBuilder();
-                eb.WithTitle($"Flip off!")
-                  .WithDescription($"{command.User.Mention} flipped off {user.Mention}!\r\n\r\n> **{RandomFlipOff()}**")
-                  .WithColor(Color.DarkPurple);
+                var authorMention = command.User.Mention;
+                var targetMention = user.Mention;
+                var eb = GetEmbed(authorMention, targetMention);
                 await command.RespondAsync(ephemeral: false, embed: eb.Build(), allowedMentions: AllowedMentions.All);
             }
             return (DataState.Pristine, DataState.Pristine);
+        }
+
+        private EmbedBuilder GetEmbed(string authorMention, string targetMention)
+        {
+            var eb = new EmbedBuilder();
+            eb.WithTitle($"Flip off!")
+              .WithDescription($"{authorMention} flipped off {targetMention}!\r\n\r\n> **{RandomFlipOff()}**")
+              .WithColor(Color.DarkPurple);
+            return eb;
         }
 
         private Random rnd = new Random();
@@ -53,10 +61,7 @@ namespace Rencord.PissBot.Droplets.Commands
             
             if (message.MentionedUsers?.FirstOrDefault() is IUser user)
             {
-                var eb = new EmbedBuilder();
-                eb.WithTitle($"Flip off!")
-                  .WithDescription($"{message.Author.Mention} flipped off {user.Mention}!\r\n\r\n> **{RandomFlipOff()}**")
-                  .WithColor(Color.DarkPurple);
+                var eb = GetEmbed(message.Author.Mention, user.Mention);
                 await message.Channel.SendMessageAsync(embed: eb.Build(), allowedMentions: AllowedMentions.All);
             }
             return (DataState.Pristine, DataState.Pristine);

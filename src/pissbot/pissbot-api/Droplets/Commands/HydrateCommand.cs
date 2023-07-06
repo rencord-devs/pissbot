@@ -25,11 +25,7 @@ namespace Rencord.PissBot.Droplets.Commands
         {
             if (command?.Data?.Options?.FirstOrDefault(x => x.Name == TargetOption)?.Value is IUser user)
             {
-                var eb = new EmbedBuilder();
-                eb.WithTitle($"Mmmm tasty beverage!")
-                  .WithDescription($"{command.User.Mention} has given a drink to {user.Mention}!")
-                  .WithImageUrl("https://media.discordapp.net/attachments/996526781127467079/1120824093944598579/347400011_3448403935434080_5808416391837202921_n.jpg?width=604&height=604")
-                  .WithColor(Color.DarkPurple);
+                var eb = GetEmbed(command.User.Mention, user.Mention);
                 await command.RespondAsync(ephemeral: false, embed: eb.Build(), allowedMentions: AllowedMentions.All);
             }
             return (DataState.Pristine, DataState.Pristine);
@@ -40,14 +36,20 @@ namespace Rencord.PissBot.Droplets.Commands
 
             if (message.MentionedUsers?.FirstOrDefault() is IUser user)
             {
-                var eb = new EmbedBuilder();
-                eb.WithTitle($"Mmmm tasty beverage!")
-                  .WithDescription($"{message.Author.Mention} has given a drink to {user.Mention}!")
-                  .WithImageUrl("https://media.discordapp.net/attachments/996526781127467079/1120824093944598579/347400011_3448403935434080_5808416391837202921_n.jpg?width=604&height=604")
-                  .WithColor(Color.DarkPurple);
+                var eb = GetEmbed(message.Author.Mention, user.Mention);
                 await message.Channel.SendMessageAsync(embed: eb.Build(), allowedMentions: AllowedMentions.All);
             }
             return (DataState.Pristine, DataState.Pristine);
+        }
+
+        private EmbedBuilder GetEmbed(string authorMention, string targetMention)
+        {
+            var eb = new EmbedBuilder();
+            eb.WithTitle($"Mmmm tasty beverage!")
+              .WithDescription($"{authorMention} has given a drink to {targetMention}!")
+              .WithImageUrl("https://media.discordapp.net/attachments/996526781127467079/1120824093944598579/347400011_3448403935434080_5808416391837202921_n.jpg?width=604&height=604")
+              .WithColor(Color.DarkPurple);
+            return eb;
         }
     }
 }
